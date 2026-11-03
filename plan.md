@@ -78,14 +78,14 @@ The order follows SPEC §14: the hardest guarantee comes first, and the UI waits
 - `executeAction` is an `internalMutation`: only server code (later `shiftBoundary`) can call it. It checks for an existing execution record *before* reading the permission, so a retry after a demotion returns the committed result rather than a refusal.
 - Approvals are recorded at any level, and `queue.approve` queues the action for the next shift. Shadow still refuses at execution.
 - Roles come from a `role` claim in the JWT. Step 5 must add a Clerk JWT template that maps user public metadata to `role`.
-- `checks/guardrails.ts` implements G1, G5, G6 and the horizon part of G4. G2, G3, G7, G8 and G4's availability intervals are reported as `notYetImplemented` and need step 2's factory data.
+- `checks/guardrails.ts` started with G1, G5, G6 and part of G4; step 2 completed G1–G8.
 - `promoteToLimited` (supervised → limited, demoted → limited) is not built: it needs the recovery evidence from steps 6–7. For now, limited autonomy exists only through the fault-injection override.
 - Suite verdicts are written by a placeholder `recordSuiteVerdict`; step 4 replaces it with real suite runs.
 - Manifest hashes are supplied by callers for now; step 3 computes them.
 
 ---
 
-## Step 2 — Scheduling model, oracle and checks (no AI)
+## Step 2 — Scheduling model, oracle and checks (no AI) ✅
 
 **Build**
 - `sim/`, implementing the §3 model:
@@ -113,6 +113,18 @@ The order follows SPEC §14: the hardest guarantee comes first, and the UI waits
 - C4 flags a plan built on standard speed in the slow-machine scenario.
 
 **Done when** all checks have a passing and a failing fixture, the tests above pass, and step 1's tests are still green with the real guardrails.
+
+**As built (interpretations of the spec to keep consistent)**
+- **Setup:** the first job on a line has no predecessor and no setup. A job after frozen work takes setup if the frozen job's family differs.
+- **Materials** are consumed in full at job start. Unconfirmed arrivals don't count.
+- **Dispositions:** `scheduled` must match the schedule exactly (G5), so held or escalated orders aren't in it. `escalations[]` is separate: an order can be scheduled late *and* escalated (the impossible-deadline reference plan does this).
+- **G8 dependency model:** every commitment depends on ERP routing, on ERP stock if the order has a BOM, and on MES only if the data view includes MES. If a manifest sets no `maxDataAgeShifts`, the policy default of 2 shifts applies (op-v1).
+- **T1** allows a scheduled order with commitment `none` (scheduled without a promised date).
+- **C1** exempts orders whose dates depend on stale data. Without the exemption, C1 would contradict the stale-inventory scenario's expected escalation.
+- **Oracle lower bound** for each order: the order alone on its best eligible line, right after frozen work, with true cycle times. The witness is the feasible schedule with the least total lateness, then the shortest makespan.
+- **Priority rule** (`sim/model.ts#comparePriority`): rush first, then earlier due hour, then lower `priorityRank`. A tie on all three is a true tie and must be escalated.
+- **True cycle times** live only in `sim/scenarios.ts` and are not stored in Convex. Steps 6–7 will need a simulation-truth store for outcomes.
+- `sessions.seedFromScenario` seeds a suite session from any rs-1.0 scenario. It verifies the oracle's witness first and refuses to seed if the witness fails.
 
 ---
 

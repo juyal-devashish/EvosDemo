@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-Steps 0–1 are done: Next.js 16 App Router, Convex (anonymous local deployment), Vitest + `convex-test`, Playwright (empty suite), the full Convex schema, the permission levels, approvals, the action queue and the atomic `executeAction` in [convex/execute.ts](convex/execute.ts). Step-specific deviations and deferrals are recorded under each step in plan.md. Backend test fixtures live in [tests/backend/fixtures.ts](tests/backend/fixtures.ts). Shared domain types live in [sim/domain.ts](sim/domain.ts); extend them, don't redefine them. The commands in AGENTS.md are the real scripts.
+Steps 0–2 are done: Next.js 16 App Router, Convex (anonymous local deployment), Vitest + `convex-test`, Playwright (empty suite), the full Convex schema, the permission levels, approvals, the action queue and the atomic `executeAction` in [convex/execute.ts](convex/execute.ts), the scheduling model and oracle in [sim/](sim/), the 8 rs-1.0 scenarios in [sim/scenarios.ts](sim/scenarios.ts), and every check in [checks/](checks/) (G1–G8, C1–C4, T1/T3/T4, plus `evaluatePlan`). Step-specific deviations and deferrals are recorded under each step in plan.md. Backend test fixtures live in [tests/backend/fixtures.ts](tests/backend/fixtures.ts). Shared domain types live in [sim/domain.ts](sim/domain.ts); extend them, don't redefine them. The commands in AGENTS.md are the real scripts.
 
 Next.js 16 differs from older versions (for example, the global `LayoutProps` route types come from `next typegen`). Check `node_modules/next/dist/docs/` before writing Next code.
 
