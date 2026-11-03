@@ -46,6 +46,8 @@ export default defineSchema({
     currentShift: v.number(),
     /** Incremented by every committed business-state change (§9.3). */
     stateVersion: v.number(),
+    /** Decision slots (shifts) per simulated day; the replay compresses time to 6. Default 2. */
+    slotsPerDay: v.optional(v.number()),
   }),
 
   manifests: defineTable(manifestFields).index("by_hash", ["manifestHash"]),
@@ -281,6 +283,59 @@ export default defineSchema({
     createdAt: v.number(),
     resolvedAt: v.optional(v.number()),
   }).index("by_state", ["state"]),
+
+  /**
+   * Post-execution reviews (§10.2–10.3). In this project the reviewer is the
+   * labeled synthetic reviewer. A review annotates a revision; corrections
+   * would be new proposals, and history is never rewritten.
+   */
+  reviews: defineTable({
+    sessionId: v.id("sessions"),
+    manifestHash: v.string(),
+    proposalRevisionId: v.id("proposalRevisions"),
+    actionId: v.optional(v.id("actions")),
+    reviewer: v.literal("synthetic"),
+    jobType: v.literal("routine"),
+    /** Decided under supervision (before execution) or after execution (limited). */
+    mode: v.union(v.literal("supervised"), v.literal("post_execution")),
+    proposalDay: v.number(),
+    /** null while pending. */
+    agreed: v.union(v.boolean(), v.null()),
+    shouldEdit: v.boolean(),
+    reasons: v.array(v.string()),
+    reviewedOnDay: v.optional(v.number()),
+  })
+    .index("by_session_manifest", ["sessionId", "manifestHash", "proposalDay"])
+    .index("by_revision", ["proposalRevisionId"]),
+
+  /** One evaluation of the monitoring rule (§10.4), kept as evidence. */
+  monitorWindows: defineTable({
+    sessionId: v.id("sessions"),
+    manifestHash: v.string(),
+    windowIndex: v.number(),
+    startDay: v.number(),
+    endDay: v.number(),
+    evaluatedOnDay: v.number(),
+    status: v.union(v.literal("insufficientData"), v.literal("ok"), v.literal("signal")),
+    n: v.number(),
+    x: v.number(),
+    pending: v.number(),
+    pValue: v.optional(v.number()),
+    p0: v.number(),
+    alpha: v.number(),
+    reviewIds: v.array(v.id("reviews")),
+  }).index("by_session_manifest", ["sessionId", "manifestHash", "windowIndex"]),
+
+  /** Progress of one shift boundary, so a retried boundary resumes instead of repeating (§9.6). */
+  boundaryRuns: defineTable({
+    sessionId: v.id("sessions"),
+    toShift: v.number(),
+    closed: v.boolean(),
+    evaluated: v.boolean(),
+    released: v.boolean(),
+    demotionIds: v.array(v.id("permissionChanges")),
+    executedActionIds: v.array(v.id("actions")),
+  }).index("by_session_shift", ["sessionId", "toShift"]),
 
   audit: defineTable({
     sessionId: v.id("sessions"),

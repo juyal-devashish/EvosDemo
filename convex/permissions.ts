@@ -1,9 +1,11 @@
 import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-import { internalMutation, mutation, query, type MutationCtx } from "./_generated/server";
+import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { requireRole, systemActor, type Actor } from "./auth";
 import { currentPermission, effectiveLevel, getSession, writeAudit } from "./lib/records";
 import { reportEvent } from "./lib/telemetry";
+import { MONITOR_CONFIG } from "../stats/config";
+import { clopperPearsonLower } from "../stats/binomial";
 import { manifestFields, type PermissionLevel, type Scope } from "./lib/validators";
 
 // Permission ladder (SPEC §9.4), per sessionId × manifestHash × scope.
@@ -66,7 +68,7 @@ export async function setLevel(
   return changeId;
 }
 
-async function requireManifest(ctx: MutationCtx, manifestHash: string) {
+async function requireManifest(ctx: QueryCtx, manifestHash: string) {
   const manifest = await ctx.db
     .query("manifests")
     .withIndex("by_hash", (q) => q.eq("manifestHash", manifestHash))
@@ -181,4 +183,76 @@ export const recordSuiteVerdict = internalMutation({
     scenarioIds: v.array(v.string()),
   },
   handler: async (ctx, args) => ctx.db.insert("suiteVerdicts", { ...args, recordedAt: Date.now() }),
+});
+
+/** The regression scenario for the SMT-2 incident: it must be in the passed suite (SPEC §9.4). */
+export const INCIDENT_REGRESSION_SCENARIO = "slow-machine";
+
+/**
+ * Recovery evidence for supervised → limited or demoted → limited (SPEC
+ * §10.6): fresh supervised reviews of routine reschedules for this
+ * manifest, taken after the session's most recent demotion, with a
+ * one-sided 95% Clopper–Pearson lower bound at or above the pre-set floor.
+ */
+export async function recoveryEvidence(ctx: QueryCtx, sessionId: Id<"sessions">, manifestHash: string) {
+  const demotions = await ctx.db
+    .query("permissionChanges")
+    .filter((q) => q.and(q.eq(q.field("sessionId"), sessionId), q.eq(q.field("to"), "demoted")))
+    .collect();
+  const since = Math.max(0, ...demotions.map((d) => d.changedAt));
+  const reviews = (
+    await ctx.db
+      .query("reviews")
+      .withIndex("by_session_manifest", (q) => q.eq("sessionId", sessionId).eq("manifestHash", manifestHash))
+      .collect()
+  ).filter((r) => r.mode === "supervised" && r.jobType === "routine" && r.agreed !== null && r._creationTime > since);
+  const n = reviews.length;
+  const x = reviews.filter((r) => r.agreed).length;
+  const { floor, minFreshReviews, confidence } = MONITOR_CONFIG.recovery;
+  const lowerBound = n === 0 ? 0 : clopperPearsonLower(x, n, 1 - confidence);
+  return { n, x, lowerBound, floor, minFreshReviews, sufficient: n >= minFreshReviews && lowerBound >= floor, reviewIds: reviews.map((r) => r._id) };
+}
+
+export const recoveryStatus = query({
+  args: { sessionId: v.id("sessions"), manifestHash: v.string() },
+  handler: async (ctx, { sessionId, manifestHash }) => {
+    const { reviewIds: _ids, ...rest } = await recoveryEvidence(ctx, sessionId, manifestHash);
+    void _ids;
+    return rest;
+  },
+});
+
+/** supervised/demoted → limited: suite (with the regression scenario) + recovery evidence + qa. */
+export const promoteToLimited = mutation({
+  args: { sessionId: v.id("sessions"), manifestHash: v.string() },
+  handler: async (ctx, args) => {
+    const actor = await requireRole(ctx, ["qa"]);
+    await getSession(ctx, args.sessionId);
+    const manifest = await requireManifest(ctx, args.manifestHash);
+    const key = { ...args, scope: SCOPE };
+    const { level } = await currentPermission(ctx, key);
+    if (level !== "supervised" && level !== "demoted") {
+      throw new ConvexError({ code: "invalid_transition", from: level, to: "limited" });
+    }
+    const verdicts = await ctx.db
+      .query("suiteVerdicts")
+      .withIndex("by_manifest", (q) => q.eq("manifestHash", args.manifestHash).eq("suiteVersion", manifest.suiteVersion))
+      .collect();
+    const passed = verdicts.find((r) => r.verdict === "passed" && r.scenarioIds.includes(INCIDENT_REGRESSION_SCENARIO));
+    if (passed === undefined) {
+      throw new ConvexError({ code: "suite_not_passed", suiteVersion: manifest.suiteVersion, regression: INCIDENT_REGRESSION_SCENARIO });
+    }
+    const ev = await recoveryEvidence(ctx, args.sessionId, args.manifestHash);
+    if (!ev.sufficient) {
+      // Insufficient evidence → stays supervised.
+      throw new ConvexError({ code: "insufficient_evidence", n: ev.n, x: ev.x, lowerBound: ev.lowerBound, floor: ev.floor, minFreshReviews: ev.minFreshReviews });
+    }
+    return setLevel(ctx, key, {
+      to: "limited",
+      trigger: "qa_authorization",
+      actor,
+      evidenceIds: [passed._id, ...ev.reviewIds.slice(0, 20)],
+      note: `${ev.x}/${ev.n} fresh supervised reviews; 95% lower bound ${ev.lowerBound.toFixed(3)} ≥ floor ${ev.floor}`,
+    });
+  },
 });

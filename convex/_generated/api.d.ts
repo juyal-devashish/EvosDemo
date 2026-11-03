@@ -9,19 +9,23 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as boundary from "../boundary.js";
 import type * as budget from "../budget.js";
+import type * as evidence from "../evidence.js";
 import type * as execute from "../execute.js";
 import type * as lib_factory from "../lib/factory.js";
 import type * as lib_records from "../lib/records.js";
 import type * as lib_telemetry from "../lib/telemetry.js";
 import type * as lib_validators from "../lib/validators.js";
 import type * as me from "../me.js";
+import type * as monitor from "../monitor.js";
 import type * as operator from "../operator.js";
 import type * as permissions from "../permissions.js";
 import type * as pilot from "../pilot.js";
 import type * as pools from "../pools.js";
 import type * as proposals from "../proposals.js";
 import type * as queue from "../queue.js";
+import type * as replay from "../replay.js";
 import type * as results from "../results.js";
 import type * as review from "../review.js";
 import type * as sessions from "../sessions.js";
@@ -36,19 +40,23 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  boundary: typeof boundary;
   budget: typeof budget;
+  evidence: typeof evidence;
   execute: typeof execute;
   "lib/factory": typeof lib_factory;
   "lib/records": typeof lib_records;
   "lib/telemetry": typeof lib_telemetry;
   "lib/validators": typeof lib_validators;
   me: typeof me;
+  monitor: typeof monitor;
   operator: typeof operator;
   permissions: typeof permissions;
   pilot: typeof pilot;
   pools: typeof pools;
   proposals: typeof proposals;
   queue: typeof queue;
+  replay: typeof replay;
   results: typeof results;
   review: typeof review;
   sessions: typeof sessions;

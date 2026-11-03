@@ -531,3 +531,55 @@ details summary {
   cursor: pointer;
   font-size: 14px;
 }
+
+/* ── Replay timeline (UI-GUIDE §9) ─────────────────────────────────── */
+
+.day-bars {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 8px;
+}
+
+.day-bar {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) minmax(0, 220px);
+  gap: 12px;
+  align-items: center;
+}
+
+.bar {
+  display: flex;
+  height: 12px;
+  background: var(--subtle);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bar-agree {
+  background: var(--active-blue);
+}
+
+.bar-edit {
+  background: var(--danger);
+}
+
+@media (max-width: 600px) {
+  .day-bar {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+  .day-bar > :last-child {
+    grid-column: 2;
+  }
+}
+
+/* ── Evidence chain ────────────────────────────────────────────────── */
+
+.evidence-chain {
+  list-style: none;
+  display: grid;
+  gap: 16px;
+}
+
+.evidence-step {
+  border-left: 3px solid var(--danger);
+}
