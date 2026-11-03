@@ -98,7 +98,8 @@ export function g4Availability(snapshot: FactorySnapshot, schedule: readonly Sch
 }
 
 /**
- * G5 (structural; the Zod schema check on model output is added in step 3):
+ * G5 (structural; model output is also validated by the Zod schema in
+ * operator/planSchema.ts before it becomes a proposal):
  * finite hours with positive length, one job and at most one disposition
  * per order, and `scheduled` exactly for orders in the schedule.
  */
