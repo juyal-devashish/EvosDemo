@@ -11,6 +11,7 @@
 import type * as auth from "../auth.js";
 import type * as boundary from "../boundary.js";
 import type * as budget from "../budget.js";
+import type * as evidence from "../evidence.js";
 import type * as execute from "../execute.js";
 import type * as lib_factory from "../lib/factory.js";
 import type * as lib_records from "../lib/records.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   boundary: typeof boundary;
   budget: typeof budget;
+  evidence: typeof evidence;
   execute: typeof execute;
   "lib/factory": typeof lib_factory;
   "lib/records": typeof lib_records;
