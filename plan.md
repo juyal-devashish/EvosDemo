@@ -387,7 +387,7 @@ These are claims about the monitor's statistical behavior on resampled pools wit
 
 ---
 
-## Step 8 — README, deploy and demo (deploy ✅, video pending)
+## Step 8 — README, deploy and demo ✅
 
 - README covering:
   - what is simulated and what is real
@@ -406,6 +406,7 @@ These are claims about the monitor's statistical behavior on resampled pools wit
 - **Clerk:** the development instance works on the Vercel domain without allowed-origins changes.
 - **The user ran the production steps** (`convex deploy`, `env set --prod`, `import --prod`, Vercel env vars). Claude Code's auto-mode classifier blocks those for the agent.
 - **Verified:** all 8 Playwright tests pass against production (`E2E_BASE_URL`).
+- **Demo video:** [docs/demo.mp4](docs/demo.mp4), a silent walkthrough with captions, recorded from the live site by `scripts/record-demo.ts`. It's read-only, signs in as the qa test user, and covers both acts and recovery.
 
 ---
 

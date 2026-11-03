@@ -3,6 +3,7 @@
 A release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory. It's an independent work sample for the Evos Product & AI Quality Engineer role, not an Evos product.
 
 **Live:** https://evosdemo.vercel.app (results and evidence are public; Review and QA need a signed-in planner or qa account)
+**Demo:** [docs/demo.mp4](docs/demo.mp4), a 1 min 44 s captioned walkthrough of both acts, recorded on the live site with `npx tsx scripts/record-demo.ts`
 
 The operator (Claude Opus 5.5) earns autonomy step by step: **shadow → supervised → limited**. It loses it automatically when production reviews go bad.
 
