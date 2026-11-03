@@ -18,8 +18,8 @@ type Evidence = NonNullable<FunctionReturnType<typeof api.evidence.forAction>>;
 
 /**
  * The one-sentence headline for the refusal: what happened, and whether
- * anything was executed. UI-GUIDE §9: "A blocked state must say whether
- * execution occurred."
+ * anything was executed. A blocked state must say whether
+ * execution occurred.
  */
 export function outcomeHeadline(e: Pick<Evidence, "action" | "execution" | "plannedJobs">): string {
   if (e.execution?.executed) return "This action executed; it was not refused.";
