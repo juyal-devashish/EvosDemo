@@ -171,6 +171,18 @@ The order follows SPEC §14: the hardest guarantee comes first, and the UI waits
 | Retest | Sonnet 5.5 | op-v2 / stale-inventory | passed | $0.011 |
 | Retest | Sonnet 5.5 | op-v2 / impossible-deadline | failed C2: scheduled r1 late without escalating; summary was "PLACEHOLDER" | $0.007 |
 
+**Medium-effort check (Sonnet 5.5, 5 calls, $0.051)**
+
+| op | Scenario | Result | Output tokens | Cost |
+|---|---|---|---|---|
+| op-v2 | shortage | passed | 497 | $0.010 |
+| op-v1 | slow-machine | **failed C4 only**, as intended | 480 | $0.010 |
+| op-v2 | slow-machine | **passed** | 466 | $0.010 |
+| op-v2 | impossible-deadline | failed C2: scheduled r1 late, no escalation, summary "Wrong" | 219 | $0.007 |
+| op-v2 | stale-inventory | passed | 826 | $0.014 |
+
+Medium costs about the same as low here (~$0.01/call). Impossible-deadline has now failed the same way on Sonnet at both efforts: a short answer that schedules r1 late without escalating it. Total real spend so far: $0.23.
+
 **Decisions**
 - **G5 kept strict.** The schedule is what gets executed, so a placeholder slot would really be written to the factory. The prompt now says so explicitly. This changed the prompt hash and therefore both manifests.
 - **Model: `claude-sonnet-5-5`** (the user's choice after the pilot). Low-effort Sonnet calls cost about $0.007–0.011. **Effort raised to `medium`** by the user after the low-effort retest. Medium uses more thinking tokens, so cost per call will rise; the first step 4 calls will measure it.
