@@ -37,8 +37,10 @@ export async function settle(ctx: MutationCtx, reservationId: Id<"budgetReservat
   if (res === null || res.state !== "open") return res?.actualCostUsd ?? null;
   const row = await ledger(ctx);
   const cost = usage === null ? res.maxCostUsd : actualCostUsd(res.model, usage);
+  const reserved = row.reservedUsd - res.maxCostUsd;
   await ctx.db.patch(row._id, {
-    reservedUsd: Math.max(0, row.reservedUsd - res.maxCostUsd),
+    // Clamp float residue (e.g. 2e-16) so an idle ledger reads exactly 0.
+    reservedUsd: reserved < 1e-9 ? 0 : reserved,
     spentUsd: row.spentUsd + cost,
   });
   await ctx.db.patch(reservationId, {

@@ -201,7 +201,7 @@ Medium costs about the same as low here (~$0.01/call). Impossible-deadline has n
 
 ---
 
-## Step 4 — Release suite runs
+## Step 4 — Release suite runs ✅
 
 **Build**
 - `convex/suite.ts`: `trials` with stable ids and an `expectedOutcome`, and `attempts` (§8).
@@ -223,6 +223,25 @@ Medium costs about the same as low here (~$0.01/call). Impossible-deadline has n
 - `op-v1` → **Failed: C4 on `slow-machine`**, with evidence.
 - `op-v2` → **Passed**, and a `qa` user promotes it to supervised.
 - If `op-v2` fails, stop, investigate and report. Don't loosen checks to get a pass.
+
+**As built**
+- **Fan-out uses the Convex scheduler, not Inngest** (the user's choice; a deliberate deviation from SPEC §2). `suite.start` (qa) or `suite:startFromCli` creates the run, seeds one session per trial, and schedules one `runTrial` per trial, spaced 1.5 s apart. Inngest is still planned for `shiftBoundary` in step 7.
+- **How trials are scored:**
+  - A trial is judged on attempt 1 only. One infrastructure retry is made after a no-response first attempt, and it's recorded but never scored.
+  - A refusal or parse failure on attempt 1 fails the trial.
+  - No response or a budget-blocked attempt 1 leaves the trial `missing`, which makes the suite `incomplete`.
+- **Failed-write scenario:** the trial executes its plan through the real `executeAction` path, under a recorded `suite_harness` permission in its own isolated session, and checks for `failed` with no business-state change.
+- **Partial or cancelled runs can't pass the gate.** A run that doesn't cover all 8 scenarios writes an `incomplete` suite verdict.
+- **Sentry deferred to step 5.** `suite.incomplete` is a structured log line plus an audit entry for now.
+
+**Results (2026-11-03, 160 real calls, $3.60; $4.19 spent in total)**
+
+| Manifest | Verdict |
+|---|---|
+| op-v2 `c506…` | **Passed rs-1.0 (8 scenarios, 10 trials each, manifest c506…)**: 80/80. The 0/10 upper bound per scenario is ≈ 26%. |
+| op-v1 `fa05…` | **Failed: C4 on slow-machine, 10/10 trials; T1 on conflicting-priorities, 8/10 trials** |
+
+**Finding: op-v1's T1 failures.** In 8 of 10 conflicting-priorities trials, op-v1 committed r2 as `on_time` while scheduling it to end at hour 20, past its due hour of 14. Its own summary said "r2 is committed as late." Likely cause: since step 3, the output schema writes `dispositions` (including the commitment) before `schedule`, so the commitment is generated before the end hour exists. op-v2 passed the same scenario 10/10, but the risk is structural. The truth check T1 caught it, as designed.
 
 ---
 
