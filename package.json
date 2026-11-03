@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test --pass-with-no-tests",
     "check": "npm run typecheck && npm run lint && npm test",
-    "convex": "convex dev"
+    "convex": "convex dev",
+    "validate:monitor": "tsx scripts/validate-monitor.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "1.4.0",
