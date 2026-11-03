@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Suspense } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { CHECK, LEVEL, shortHash } from "../../labels";
@@ -39,6 +40,15 @@ export function outcomeHeadline(e: Pick<Evidence, "action" | "execution" | "plan
 }
 
 export default function EvidencePage() {
+  // useParams is runtime data; under cacheComponents it needs a Suspense boundary.
+  return (
+    <Suspense fallback={<p className="intro muted">Loading evidence…</p>}>
+      <EvidenceView />
+    </Suspense>
+  );
+}
+
+function EvidenceView() {
   const { actionId } = useParams<{ actionId: string }>();
   const e = useQuery(api.evidence.forAction, { actionId: actionId as Id<"actions"> });
 
