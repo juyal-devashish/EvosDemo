@@ -6,9 +6,9 @@ Guidance for AI coding agents (Claude Code, Codex, Cursor, etc.) working in this
 
 **EvosDemo:** a release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory.
 
-- **[SPEC.md](SPEC.md) is the source of truth.** Read the relevant section before changing behavior. If code and spec disagree, flag it; don't silently pick one.
+- **[SPEC.md](docs/SPEC.md) is the source of truth.** Read the relevant section before changing behavior. If code and spec disagree, flag it; don't silently pick one.
 - Build in the order of SPEC §14 (hardest guarantee first). Don't start UI work before the backend guarantees and their tests pass.
-- **For any UI work, follow [UI-GUIDE.md](UI-GUIDE.md):** palette and CSS tokens (§3, §11), typography (§4), layout (§5), the operator card (§7) and the evidence panel (§9). Check finished screens against its review checklist (§13). Inspired by Evos's public site, the project must use its own branding: no Evos logo, and never present it as an official Evos product.
+- **For any UI work, follow [UI-GUIDE.md](docs/UI-GUIDE.md):** palette and CSS tokens (§3, §11), typography (§4), layout (§5), the operator card (§7) and the evidence panel (§9). Check finished screens against its review checklist (§13). Inspired by Evos's public site, the project must use its own branding: no Evos logo, and never present it as an official Evos product.
 
 Stack: TypeScript (strict), Next.js/React, Convex, Inngest, Clerk, Sentry, Playwright, Vitest + `convex-test`, Vercel, Claude API (`@anthropic-ai/sdk`, version pinned).
 
