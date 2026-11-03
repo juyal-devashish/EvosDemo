@@ -243,6 +243,10 @@ Medium costs about the same as low here (~$0.01/call). Impossible-deadline has n
 
 **Finding: op-v1's T1 failures.** In 8 of 10 conflicting-priorities trials, op-v1 committed r2 as `on_time` while scheduling it to end at hour 20, past its due hour of 14. Its own summary said "r2 is committed as late." Likely cause: since step 3, the output schema writes `dispositions` (including the commitment) before `schedule`, so the commitment is generated before the end hour exists. op-v2 passed the same scenario 10/10, but the risk is structural. The truth check T1 caught it, as designed.
 
+**Decision (user):** keep these results. op-v1 failed the gate and op-v2 passed, which is act 1. The T1 failures are reported as an extra defect the truth checks caught; the schema isn't changed. If the schema is ever reordered, that's a new manifest pair and needs a rerun.
+
+**Carried to step 5:** the "qa promotes op-v2 to supervised" part of the done criteria needs a signed-in qa user, so it happens in the UI. The backend gate is in place and tested: promotion requires this passed verdict.
+
 ---
 
 ## Step 5 — UI and Playwright
