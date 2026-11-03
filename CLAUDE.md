@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-Steps 0–7 are done: Next.js 16 App Router, Convex (anonymous local deployment), Vitest + `convex-test`, Playwright (empty suite), the full Convex schema, the permission levels, approvals, the action queue and the atomic `executeAction` in [convex/execute.ts](convex/execute.ts), the scheduling model and oracle in [sim/](sim/), the 8 rs-1.0 scenarios in [sim/scenarios.ts](sim/scenarios.ts), and every check in [checks/](checks/) (G1–G8, C1–C4, T1/T3/T4, plus `evaluatePlan`). The operator (prompt, Zod plan schema, manifests op-v1/op-v2, data view, pricing, model call) is in [operator/](operator/); budget and attempts are in [convex/budget.ts](convex/budget.ts) and [convex/operator.ts](convex/operator.ts). The model is `claude-opus-5-5`, effort low. The prompt hash covers the system prompt *and* the output schema, whose field order is deliberate (see [operator/planSchema.ts](operator/planSchema.ts)). Real API calls go only through `operator:propose`, and tests use a fake client. Release-suite runs are in [convex/suite.ts](convex/suite.ts) (Convex scheduler fan-out, first-attempt verdicts from [checks/verdict.ts](checks/verdict.ts)). Current results: op-v2 `c506…` passed rs-1.0; op-v1 `fa05…` failed. Step-specific deviations and deferrals are recorded under each step in plan.md. Backend test fixtures live in [tests/backend/fixtures.ts](tests/backend/fixtures.ts). Shared domain types live in [sim/domain.ts](sim/domain.ts); extend them, don't redefine them. The commands in AGENTS.md are the real scripts.
+Steps 0–7 are done: Next.js 16 App Router, Convex (cloud project `evosdemo`; `npm run convex` targets the personal dev deployment), Vitest + `convex-test`, Playwright (empty suite), the full Convex schema, the permission levels, approvals, the action queue and the atomic `executeAction` in [convex/execute.ts](convex/execute.ts), the scheduling model and oracle in [sim/](sim/), the 8 rs-1.0 scenarios in [sim/scenarios.ts](sim/scenarios.ts), and every check in [checks/](checks/) (G1–G8, C1–C4, T1/T3/T4, plus `evaluatePlan`). The operator (prompt, Zod plan schema, manifests op-v1/op-v2, data view, pricing, model call) is in [operator/](operator/); budget and attempts are in [convex/budget.ts](convex/budget.ts) and [convex/operator.ts](convex/operator.ts). The model is `claude-opus-5-5`, effort low. The prompt hash covers the system prompt *and* the output schema, whose field order is deliberate (see [operator/planSchema.ts](operator/planSchema.ts)). Real API calls go only through `operator:propose`, and tests use a fake client. Release-suite runs are in [convex/suite.ts](convex/suite.ts) (Convex scheduler fan-out, first-attempt verdicts from [checks/verdict.ts](checks/verdict.ts)). Current results: op-v2 `c506…` passed rs-1.0; op-v1 `fa05…` failed. Step-specific deviations and deferrals are recorded under each step in plan.md. Backend test fixtures live in [tests/backend/fixtures.ts](tests/backend/fixtures.ts). Shared domain types live in [sim/domain.ts](sim/domain.ts); extend them, don't redefine them. The commands in AGENTS.md are the real scripts.
 
 `npm run convex` (the Convex watcher) only redeploys when files under `convex/` change. After editing `operator/`, `checks/` or `sim/`, touch a file in `convex/` (or restart the watcher) before making real calls. Otherwise the deployed code is stale: this once registered the old low-effort manifests.
 
@@ -36,3 +36,17 @@ These ideas span several modules. Read the cited section before touching any of 
 - **Isolation.** Every state table carries `sessionId`. Suite runs, the fault-injection replay and the public demo each get their own session (§9.1).
 
 The planned module layout is in SPEC §16, and the open decisions (model choice, trial counts, reviewer rates) are in SPEC §18.
+
+<!-- convex-ai-start -->
+
+This project uses [Convex](https://convex.dev) as its backend.
+
+When working on Convex code, **always read
+`convex/_generated/ai/guidelines.md` first** for important guidelines on
+how to correctly use Convex APIs and patterns. The file contains rules that
+override what you may have learned about Convex from training data.
+
+Convex agent skills for common tasks can be installed by running
+`npx convex ai-files install`.
+
+<!-- convex-ai-end -->

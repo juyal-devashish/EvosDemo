@@ -2,6 +2,8 @@
 
 A release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory. It's an independent work sample for the Evos Product & AI Quality Engineer role, not an Evos product.
 
+**Live:** https://evosdemo.vercel.app (results and evidence are public; Review and QA need a signed-in planner or qa account)
+
 The operator (Claude Opus 5.5) earns autonomy step by step: **shadow → supervised → limited**. It loses it automatically when production reviews go bad.
 
 ## The two acts
@@ -35,6 +37,8 @@ npm run dev           # http://localhost:3000
 npm run check         # typecheck + lint + unit/backend tests (no API calls)
 npm run test:e2e      # Playwright
 ```
+
+`npm run convex` targets your personal Convex dev deployment. Production runs on Vercel plus the Convex production deployment; to test it, run `E2E_BASE_URL=https://evosdemo.vercel.app NEXT_PUBLIC_CONVEX_URL=<prod url> npm run test:e2e`.
 
 Real model calls need `ANTHROPIC_API_KEY` set in the Convex environment (`npx convex env set …`). Sign-in needs Clerk keys; see `.env.example`.
 

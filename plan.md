@@ -387,7 +387,7 @@ These are claims about the monitor's statistical behavior on resampled pools wit
 
 ---
 
-## Step 8 — README, deploy and demo
+## Step 8 — README, deploy and demo (deploy ✅, video pending)
 
 - README covering:
   - what is simulated and what is real
@@ -399,6 +399,13 @@ These are claims about the monitor's statistical behavior on resampled pools wit
 - A demo video of both acts.
 
 **Done when** the README is accurate against the code, and the deployed public page matches the recorded session.
+
+**As built (2026-11-03)**
+- **Convex:** cloud project `evosdemo`. Personal dev is `savory-viper-342`, and production is `savory-hyena-968`. Both were loaded from a snapshot of the local deployment (4,044 records, including the ledger at $7.15).
+- **Vercel:** https://evosdemo.vercel.app, connected to GitHub, so pushes to `main` deploy.
+- **Clerk:** the development instance works on the Vercel domain without allowed-origins changes.
+- **The user ran the production steps** (`convex deploy`, `env set --prod`, `import --prod`, Vercel env vars). Claude Code's auto-mode classifier blocks those for the agent.
+- **Verified:** all 8 Playwright tests pass against production (`E2E_BASE_URL`).
 
 ---
 
