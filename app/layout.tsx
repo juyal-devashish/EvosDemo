@@ -11,7 +11,7 @@ const inter = Inter({ variable: "--font-inter", subsets: ["latin"], weight: ["30
 const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500"] });
 
 export const metadata: Metadata = {
-  title: "Earned Autonomy",
+  title: "EvosDemo",
   description:
     "Release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory. An independent work sample.",
 };
@@ -25,9 +25,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="strip">Simulation · synthetic factory and data · independent work sample, not an Evos product</div>
         <div className="shell">
           <header className="nav">
-            <Link href="/" className="brand" aria-label="Earned Autonomy, results">
+            <Link href="/" className="brand" aria-label="EvosDemo, results">
               <span className="mark" aria-hidden="true" />
-              Earned Autonomy
+              EvosDemo
             </Link>
             {/* AuthNav reads the URL (usePathname); under cacheComponents that runtime read needs a Suspense boundary. */}
             <Suspense fallback={<div className="nav-meta" />}>

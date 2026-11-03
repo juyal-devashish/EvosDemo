@@ -1,4 +1,4 @@
-# Earned Autonomy — Technical Specification
+# EvosDemo — Technical Specification
 
 A release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory.
 
@@ -374,7 +374,7 @@ The report shows the **number of unique underlying proposals** in each pool. Res
 ## 16. Repo layout
 
 ```
-earned-autonomy/
+EvosDemo/
 ├─ app/                      # Next.js (React): public results, suite, monitor, evidence viewer, review panel
 │  └─ api/inngest/route.ts   # Inngest serve endpoint
 ├─ convex/

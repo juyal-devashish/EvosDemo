@@ -40,7 +40,7 @@ export const send = internalAction({
       method: "POST",
       headers: {
         "Content-Type": "application/x-sentry-envelope",
-        "X-Sentry-Auth": `Sentry sentry_version=7, sentry_key=${key}, sentry_client=earned-autonomy-convex/1.0`,
+        "X-Sentry-Auth": `Sentry sentry_version=7, sentry_key=${key}, sentry_client=evosdemo-convex/1.0`,
       },
       body: envelope,
     });
