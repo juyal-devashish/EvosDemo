@@ -28,7 +28,7 @@ Stack: TypeScript (strict), Next.js/React, Convex, Inngest, Clerk, Sentry, Playw
 - Work on a feature branch for multi-step work. Don't commit directly to `main` once it exists with history.
 - Check `git status` and the staged diff before each commit, so nothing unintended is included.
 - Never commit secrets, `.env*` files (except `.env.example`), API keys, `node_modules/`, build output, test traces or evidence exports.
-- **Push after every commit** to `origin` (the user authorized this). When a step's done criteria pass, merge its branch into `main` and push `main`.
+- **Commit and push after every file edited** (the user's standing instruction). If one file alone would break type checks, commit the smallest set of files that keeps the tree green. Push to `origin` immediately after each commit. When a step's done criteria pass, merge its branch into `main` and push `main`.
 - Don't deploy or publish without the user's authorization. Never force-push or rewrite published history.
 
 ## Engineering practices
