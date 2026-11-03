@@ -9,7 +9,7 @@ import { requireRole, systemActor, type Actor } from "./auth";
 import { executeActionInTransaction } from "./execute";
 import { loadJobs } from "./lib/factory";
 import { getSession, writeAudit } from "./lib/records";
-import { logEvent } from "./lib/telemetry";
+import { reportEvent } from "./lib/telemetry";
 import type { ProposeResult } from "./operator";
 import { setLevel } from "./permissions";
 import { enqueue } from "./queue";
@@ -287,7 +287,7 @@ async function finalizeIfDone(ctx: MutationCtx, run: Doc<"suiteRuns">) {
   const actor = systemActor("suite");
   await writeAudit(ctx, { sessionId: run.sessionId, kind: `suite.${verdict.kind}`, actor, refs: [run._id], detail: verdict.text });
   if (verdict.kind === "incomplete") {
-    logEvent("suite.incomplete", { suiteRunId: run._id, manifestHash: run.manifestHash, missing: verdict.missing });
+    await reportEvent(ctx, "suite.incomplete", { suiteRunId: run._id, manifestHash: run.manifestHash, missing: verdict.missing });
   }
   return verdict;
 }
