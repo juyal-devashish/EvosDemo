@@ -317,16 +317,16 @@ Medium costs about the same as low here (~$0.01/call). Impossible-deadline has n
 **Done when** the validation numbers are recorded and the config is frozen.
 
 **As built**
-- **Stats** ([stats/](stats/)): exact binomial tail; one-sided Clopper–Pearson bounds (77/80 → 0.906, 76/80 → 0.889, as in §10.6); EWMA with λ 0.2, L 3, the baseline from the first 20 shifts, context only.
-- **Monitoring rule** ([stats/rule.ts](stats/rule.ts)): 3-day windows, evaluated when the window's reviews are in or 2 days after it closes, whichever is first. Pending reviews are flagged and never counted. n < 15 is insufficient data. α = 0.00135.
-- **Synthetic reviewer** ([sim/reviewer.ts](sim/reviewer.ts)): it wants to edit when any C or T check fails, or a duration is more than 10% off the true duration. It catches that with pCatch = 0.9, and edits a correct plan with pPicky = 0.03.
-- **Pools:** the 160 recorded rs-1.0 proposals, exported to [stats/pools.json](stats/pools.json).
+- **Stats** ([stats/](../stats/)): exact binomial tail; one-sided Clopper–Pearson bounds (77/80 → 0.906, 76/80 → 0.889, as in §10.6); EWMA with λ 0.2, L 3, the baseline from the first 20 shifts, context only.
+- **Monitoring rule** ([stats/rule.ts](../stats/rule.ts)): 3-day windows, evaluated when the window's reviews are in or 2 days after it closes, whichever is first. Pending reviews are flagged and never counted. n < 15 is insufficient data. α = 0.00135.
+- **Synthetic reviewer** ([sim/reviewer.ts](../sim/reviewer.ts)): it wants to edit when any C or T check fails, or a duration is more than 10% off the true duration. It catches that with pCatch = 0.9, and edits a correct plan with pPicky = 0.03.
+- **Pools:** the 160 recorded rs-1.0 proposals, exported to [stats/pools.json](../stats/pools.json).
   - Healthy pool: 40 unique op-v1 proposals on routine scenarios; none should be edited.
   - Drifted pool: 10 unique op-v1 slow-machine proposals; all should be edited.
 - **p₀ = 0.9688**, from a separate baseline dataset (20,000 synthetic reviews, seed 900001). It's largely designed in by pPicky, and is disclosed as an assumption.
-- **Frozen config:** [stats/config.ts](stats/config.ts), commit `8aab8c5`, frozen before the recorded session.
+- **Frozen config:** [stats/config.ts](../stats/config.ts), commit `8aab8c5`, frozen before the recorded session.
 
-**Validation** ([stats/validation-report.json](stats/validation-report.json); 1,000 seeded replays per condition, 30-day horizon, drift from day 10, 6 routine proposals/day)
+**Validation** ([stats/validation-report.json](../stats/validation-report.json); 1,000 seeded replays per condition, 30-day horizon, drift from day 10, 6 routine proposals/day)
 
 | Condition | Result (95% CI) | Detection delay |
 |---|---|---|
