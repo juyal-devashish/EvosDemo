@@ -8,6 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Pre-scaffold: the repo holds only [SPEC.md](SPEC.md), [AGENTS.md](AGENTS.md) and this file. No code, `package.json` or scripts exist yet, so the commands in AGENTS.md are expected, not verified. Replace them with the real scripts once step 1 of SPEC §14 is scaffolded.
 
+[plan.md](plan.md) is the step-by-step build plan: done criteria, which tests each step needs, and where to stop and ask before making API calls or deploying. Follow it, and keep it updated as steps finish.
+
 ## Architecture (big picture from SPEC.md)
 
 These ideas span several modules. Read the cited section before touching any of them.
