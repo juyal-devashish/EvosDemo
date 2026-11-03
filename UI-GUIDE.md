@@ -118,7 +118,7 @@ Observed header:
 - Light header area below a lime announcement bar.
 
 Demo adaptation:
-- Use your own simple mark and the name "Earned Autonomy".
+- Use your own simple mark and the name "EvosDemo".
 - Add a discreet "Independent manufacturing demo" label.
 - Use a short top navigation rather than reproducing all marketing menus.
 - A slim lime strip may say "Simulation · Northfield Circuits" if useful; avoid adding a decorative banner without information.
