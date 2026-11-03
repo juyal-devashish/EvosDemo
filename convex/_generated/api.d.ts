@@ -20,6 +20,7 @@ import type * as permissions from "../permissions.js";
 import type * as pilot from "../pilot.js";
 import type * as proposals from "../proposals.js";
 import type * as queue from "../queue.js";
+import type * as results from "../results.js";
 import type * as sessions from "../sessions.js";
 import type * as suite from "../suite.js";
 
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   pilot: typeof pilot;
   proposals: typeof proposals;
   queue: typeof queue;
+  results: typeof results;
   sessions: typeof sessions;
   suite: typeof suite;
 }>;
