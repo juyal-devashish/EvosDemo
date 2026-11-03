@@ -147,8 +147,15 @@ describe("pricing", () => {
   test("unknown model has no pricing → refuses", () => expect(() => maxCostUsd("other", 1, 1)).toThrow(/no pricing/));
 });
 
-test("manifests use claude-sonnet-5-5 at medium effort, and it has pricing", async () => {
+test("manifests use claude-opus-5-5 at low effort, and it has pricing", async () => {
   const m = await opV2();
-  expect(m).toMatchObject({ model: "claude-sonnet-5-5", effort: "medium" });
-  expect(actualCostUsd(m.model, USAGE)).toBeCloseTo(1200 * 2e-6 + 800 * 10e-6, 10);
+  expect(m).toMatchObject({ model: "claude-opus-5-5", effort: "low" });
+  expect(actualCostUsd(m.model, USAGE)).toBeCloseTo(1200 * 4e-6 + 800 * 20e-6, 10);
+});
+
+test("output schema puts dispositions before the schedule, and the prompt hash covers it", async () => {
+  const { PlanSchema } = await import("./planSchema");
+  expect(Object.keys(PlanSchema.shape)).toEqual(["dispositions", "escalations", "schedule", "summary"]);
+  const { promptHash } = await import("./manifest");
+  expect(await promptHash()).toMatch(/^[0-9a-f]{64}$/);
 });

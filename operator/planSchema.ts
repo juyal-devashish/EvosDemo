@@ -24,10 +24,15 @@ export const EscalationSchema = z.object({
   reason: z.string(),
 });
 
+// Field order matters: structured output is generated in schema order.
+// Dispositions and escalations come first, so the model decides each
+// order's status before writing the schedule that gets executed. With
+// schedule first, the pilot saw a slot written for an order the model
+// then escalated ("the schedule entry ... was a mistake").
 export const PlanSchema = z.object({
-  schedule: z.array(ScheduleEntrySchema),
   dispositions: z.array(DispositionSchema),
   escalations: z.array(EscalationSchema),
+  schedule: z.array(ScheduleEntrySchema),
   summary: z.string(),
 });
 

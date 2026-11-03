@@ -1,6 +1,8 @@
 import { GUARDRAIL_VERSION } from "../checks/guardrails";
 import { SUITE_VERSION } from "../sim/scenarios";
 import { canonicalJson, sha256Hex } from "./hash";
+import { z } from "zod";
+import { PlanSchema } from "./planSchema";
 import { SYSTEM_PROMPT } from "./prompt";
 
 // Operator manifests (SPEC §6). The hash covers every field, so any change
@@ -24,19 +26,21 @@ export type ManifestBody = {
 
 export type Manifest = ManifestBody & { manifestHash: string };
 
-export const promptHash = () => sha256Hex(SYSTEM_PROMPT);
+/** Covers the system prompt and the output schema: changing either is a new operator release. */
+export const promptHash = () =>
+  sha256Hex(canonicalJson({ system: SYSTEM_PROMPT, outputSchema: z.toJSONSchema(PlanSchema) }));
 
 export async function hashManifest(body: ManifestBody): Promise<Manifest> {
   return { ...body, manifestHash: await sha256Hex(canonicalJson(body)) };
 }
 
 const common = {
-  // Chosen by the user after the step 3 cost pilot (plan.md). Sonnet 5.5
-  // thinks adaptively by default; effort is set explicitly because its
-  // default is high. Raised from low to medium by the user after the
-  // low-effort retest produced a weak impossible-deadline plan.
-  model: "claude-sonnet-5-5",
-  effort: "medium" as const,
+  // Back to Opus 5.5 at low effort (SPEC §6) after Sonnet 5.5 failed the
+  // impossible-deadline scenario at both low and medium effort (plan.md,
+  // step 3). Opus 5.5 always thinks; effort is set explicitly because its
+  // default is medium.
+  model: "claude-opus-5-5",
+  effort: "low" as const,
   // Thinking counts toward max_tokens. Pilot plans used ~500–730 output
   // tokens; this leaves headroom without inflating the budget reservation.
   maxTokens: 6000,

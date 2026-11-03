@@ -183,13 +183,19 @@ The order follows SPEC §14: the hardest guarantee comes first, and the UI waits
 
 Medium costs about the same as low here (~$0.01/call). Impossible-deadline has now failed the same way on Sonnet at both efforts: a short answer that schedules r1 late without escalating it. Total real spend so far: $0.23.
 
+**Back to Opus 5.5 at low effort (user's choice), 16 more calls, $0.37**
+- With the prompt fix alone (7 calls), one impossible-deadline plan still failed G5. The model wrote r1's slot first, then escalated it, and its summary said "the schedule entry listed for r1 was a mistake." Structured output is generated in schema order, so the schedule was being written before the model had decided each order's status.
+- **Fix:** the output schema now lists `dispositions` and `escalations` before `schedule`. The prompt hash now covers both the system prompt and the output schema, so a schema change is a new release.
+- With the reordered schema (9 calls): **every call behaved as intended.** op-v2 passed shortage, slow-machine, impossible-deadline ×3 and stale-inventory ×3. op-v1 failed slow-machine on C4 only. Cost is about $0.019–0.028 per call (mean ~$0.023).
+- Total real spend after step 3: **$0.60**. At ~$0.023/call, the ~520-proposal plan comes to about $12 of the $18 cap.
+
 **Decisions**
 - **G5 kept strict.** The schedule is what gets executed, so a placeholder slot would really be written to the factory. The prompt now says so explicitly. This changed the prompt hash and therefore both manifests.
-- **Model: `claude-sonnet-5-5`** (the user's choice after the pilot). Low-effort Sonnet calls cost about $0.007–0.011. **Effort raised to `medium`** by the user after the low-effort retest. Medium uses more thinking tokens, so cost per call will rise; the first step 4 calls will measure it.
+- **Model: `claude-opus-5-5` at effort `low`.** The user tried Sonnet 5.5 at low and medium effort. It failed impossible-deadline the same way every time (no escalation, a one-word summary), so the user switched back to Opus 5.5.
 - **No refusal fallback** to another model. The manifest names the model; a fallback's proposal would not belong to the manifest. Refusals are recorded as failed attempts.
 - **No prompt caching.** The system prompt is below the minimum cacheable size.
 
-**Open going into step 4:** on Sonnet 5.5 at low effort, the impossible-deadline answer was weak (now medium, untested). The suite will measure this properly (10 trials per scenario). Don't tune the prompt or effort to pass it without the user's say.
+**Going into step 4:** the suite measures the current manifests over 10 trials per scenario. Don't tune the prompt, schema or effort to pass it without the user's say. Any such change is a new manifest and needs its own suite run.
 
 **How to run real calls:** `npx convex run pilot:run '{"stage":"smoke"|"pilot"|"retest"}'`. Every call reserves budget first, and `npx convex run budget:status` shows the ledger.
 
@@ -363,7 +369,7 @@ None of the mandatory tests are cut.
 
 | Decision | Needed by |
 |---|---|
-| Model choice after the cost pilot | **Decided: `claude-sonnet-5-5`, effort medium** |
-| Trial counts and pool sizes if the budget is tight | **Not needed: ~$0.01/call fits the plan** |
+| Model choice after the cost pilot | **Decided: `claude-opus-5-5`, effort low** (Sonnet 5.5 tried and dropped) |
+| Trial counts and pool sizes if the budget is tight | **Not needed: ~$0.023/call → ~$12 for the plan** |
 | `pCatch` / `pPicky` | Before the step 6 freeze |
 | Public repo vs. access on request | **Decided: public** (github.com/juyal-devashish/EvosDemo) |
