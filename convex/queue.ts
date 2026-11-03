@@ -137,3 +137,27 @@ export const queueAutonomous = internalMutation({
     });
   },
 });
+
+/**
+ * Approval by a named system reviewer (the labeled synthetic reviewer in
+ * the replay's supervised recovery phase). Same binding rules as approve.
+ */
+export const approveAsSystem = internalMutation({
+  args: { sessionId: v.id("sessions"), revisionId: v.id("proposalRevisions"), reviewer: v.string() },
+  handler: async (ctx, args) => {
+    const actor = systemActor(args.reviewer);
+    const session = await getSession(ctx, args.sessionId);
+    const { revision, proposal } = await loadLatestRevision(ctx, args.sessionId, args.revisionId);
+    const approvalId = await ctx.db.insert("approvals", {
+      sessionId: args.sessionId,
+      proposalRevisionId: revision._id,
+      baseStateVersion: session.stateVersion,
+      actor,
+      manifestHash: proposal.manifestHash,
+      decidedAt: Date.now(),
+    });
+    await writeAudit(ctx, { sessionId: args.sessionId, kind: "approval.recorded", actor, refs: [approvalId, revision._id] });
+    const actionId = await enqueue(ctx, { session, proposal, revisionId: revision._id, queuedUnder: "supervised", approvalId, actor });
+    return { approvalId, actionId };
+  },
+});
