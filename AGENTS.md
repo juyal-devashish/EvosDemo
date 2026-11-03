@@ -8,7 +8,6 @@ Guidance for AI coding agents (Claude Code, Codex, Cursor, etc.) working in this
 
 - **[SPEC.md](docs/SPEC.md) is the source of truth.** Read the relevant section before changing behavior. If code and spec disagree, flag it; don't silently pick one.
 - Build in the order of SPEC §14 (hardest guarantee first). Don't start UI work before the backend guarantees and their tests pass.
-- **For any UI work, follow [UI-GUIDE.md](docs/UI-GUIDE.md):** palette and CSS tokens (§3, §11), typography (§4), layout (§5), the operator card (§7) and the evidence panel (§9). Check finished screens against its review checklist (§13). Inspired by Evos's public site, the project must use its own branding: no Evos logo, and never present it as an official Evos product.
 
 Stack: TypeScript (strict), Next.js/React, Convex (including scheduled fan-out and the shift boundary, instead of SPEC §2's Inngest; see docs/plan.md steps 4 and 7), Clerk, Sentry, Playwright, Vitest + `convex-test`, Vercel, Claude API (`@anthropic-ai/sdk`, version pinned).
 
@@ -103,17 +102,3 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
-
-<!-- convex-ai-start -->
-
-This project uses [Convex](https://convex.dev) as its backend.
-
-When working on Convex code, **always read
-`convex/_generated/ai/guidelines.md` first** for important guidelines on
-how to correctly use Convex APIs and patterns. The file contains rules that
-override what you may have learned about Convex from training data.
-
-Convex agent skills for common tasks can be installed by running
-`npx convex ai-files install`.
-
-<!-- convex-ai-end -->
