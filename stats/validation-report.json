@@ -1,0 +1,109 @@
+{
+  "label": "Monitor simulation: resampled recorded proposals + synthetic reviewer. Not independent AI evaluations.",
+  "configCommit": "8aab8c54b64452cebd9bdc3bc15d3fe7bbf990b1",
+  "config": {
+    "alpha": 0.00135,
+    "windowDays": 3,
+    "graceDays": 2,
+    "minN": 15,
+    "p0": 0.9688,
+    "reviewer": {
+      "pCatch": 0.9,
+      "pPicky": 0.03,
+      "durationTolerance": 0.1
+    },
+    "ewma": {
+      "lambda": 0.2,
+      "L": 3,
+      "baselineShifts": 20
+    },
+    "recovery": {
+      "floor": 0.9,
+      "minFreshReviews": 80,
+      "confidence": 0.95
+    },
+    "routinePerDay": 6
+  },
+  "validation": {
+    "horizonDays": 30,
+    "driftStartDay": 10,
+    "driftRates": [
+      0.25,
+      0.5,
+      1
+    ],
+    "replaysPerCondition": 1000,
+    "seedOffset": 1,
+    "reviewDelay": [
+      0.5,
+      0.3,
+      0.15,
+      0.05
+    ]
+  },
+  "pools": {
+    "healthy": {
+      "uniqueProposals": 40,
+      "shouldEdit": 0
+    },
+    "drifted": {
+      "uniqueProposals": 10,
+      "shouldEdit": 10
+    }
+  },
+  "report": {
+    "replaysPerCondition": 1000,
+    "falseDemotion": {
+      "count": 2,
+      "rate": 0.002,
+      "ci95": [
+        0.00024230111687723044,
+        0.007205838911457485
+      ]
+    },
+    "detection": [
+      {
+        "driftRate": 0.25,
+        "detected": 976,
+        "rate": 0.976,
+        "ci95": [
+          0.964499361468641,
+          0.9845636167664915
+        ],
+        "delayDays": {
+          "median": 6,
+          "p90": 13
+        },
+        "notDetectedByHorizon": 24
+      },
+      {
+        "driftRate": 0.5,
+        "detected": 1000,
+        "rate": 1,
+        "ci95": [
+          0.9963179161031341,
+          1
+        ],
+        "delayDays": {
+          "median": 4,
+          "p90": 4
+        },
+        "notDetectedByHorizon": 0
+      },
+      {
+        "driftRate": 1,
+        "detected": 1000,
+        "rate": 1,
+        "ci95": [
+          0.9963179161031341,
+          1
+        ],
+        "delayDays": {
+          "median": 4,
+          "p90": 4
+        },
+        "notDetectedByHorizon": 0
+      }
+    ]
+  }
+}
