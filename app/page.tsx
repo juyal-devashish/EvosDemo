@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
+import { ReplayTimeline } from "./components/ReplayTimeline";
 import { CHECK, EXPECTED_OUTCOME, shortHash } from "./labels";
 
 type Overview = FunctionReturnType<typeof api.results.publicOverview>;
@@ -62,16 +63,7 @@ function Results({ data }: { data: Overview }) {
 
       {data.manifests.length >= 2 && <ManifestDiff a={data.manifests[0]} b={data.manifests[1]} />}
 
-      <section className="section placeholder" aria-labelledby="act2">
-        <p className="eyebrow">Act 2 · Fault-injection replay</p>
-        <h2 id="act2" className="panel-title" style={{ margin: "6px 0" }}>
-          Not recorded yet
-        </h2>
-        <p>
-          A labeled replay will ask what happens if a defect like op-v1&apos;s slipped past the gate: the monitor demotes
-          the operator and the backend refuses its queued action. It appears here once recorded.
-        </p>
-      </section>
+      <ReplayTimeline />
     </>
   );
 }
