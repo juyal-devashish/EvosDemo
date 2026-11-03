@@ -8,20 +8,20 @@ The order follows SPEC §14: the hardest guarantee comes first, and the UI waits
 
 ## How each step runs
 
-1. Work on a feature branch (`step-N-<short-name>`). `main` only receives finished steps.
+1. Work on a feature branch named after the work, e.g. `scaffold` or `convex-core`. Don't put `step-` in branch names. `main` only receives finished steps.
 2. Build in small increments. Run the focused tests after each behavior change.
 3. Before committing, run `npm run typecheck && npm run lint && npm test`. Read the diff.
-4. Commit each logical change. At the end of a step, report what changed, what was tested, the actual results, and any limitations.
+4. Commit each logical change and push it. At the end of a step, report what changed, what was tested, the actual results, and any limitations.
 5. **Stop and ask** before:
    - anything that makes more than ~10 real Claude API calls
-   - pushing, merging to `main`, or deploying
+   - deploying (pushing after each commit and merging finished steps into `main` are pre-authorized)
    - changing a frozen threshold
 
 **Real API calls happen only in steps 3, 4 and 7.** Every other step is deterministic: seeded RNG, a simulated clock and stored proposals.
 
 ---
 
-## Step 0 — Scaffold and tooling
+## Step 0 — Scaffold and tooling ✅
 
 **Build**
 - Next.js (App Router) with TypeScript `strict`, ESLint and `npm` scripts: `dev`, `typecheck`, `lint`, `test`, `test:e2e`.

@@ -27,7 +27,8 @@ Stack: TypeScript (strict), Next.js/React, Convex, Inngest, Clerk, Sentry, Playw
 - Work on a feature branch for multi-step work. Don't commit directly to `main` once it exists with history.
 - Check `git status` and the staged diff before each commit, so nothing unintended is included.
 - Never commit secrets, `.env*` files (except `.env.example`), API keys, `node_modules/`, build output, test traces or evidence exports.
-- **Don't push, publish, deploy or merge without the user's authorization.** Never force-push or rewrite published history.
+- **Push after every commit** to `origin` (the user authorized this). When a step's done criteria pass, merge its branch into `main` and push `main`.
+- Don't deploy or publish without the user's authorization. Never force-push or rewrite published history.
 
 ## Engineering practices
 
@@ -68,21 +69,36 @@ Stack: TypeScript (strict), Next.js/React, Convex, Inngest, Clerk, Sentry, Playw
 
 ## Commands
 
-Fill in exact scripts once the project is scaffolded (step 1). Expected:
-
 | Task | Command |
 |---|---|
 | Install | `npm install` |
-| Dev (Next.js + Convex) | `npm run dev` / `npx convex dev` |
-| Type check | `npm run typecheck` |
+| Dev: Next.js | `npm run dev` |
+| Dev: Convex (local deployment, regenerates `convex/_generated/`) | `npm run convex` |
+| Regenerate Convex types only | `npx convex codegen` |
+| Type check (Next route types + app + `convex/`) | `npm run typecheck` |
 | Lint | `npm run lint` |
-| Unit + backend tests | `npm test` (Vitest + `convex-test`) |
-| Single backend test | `npx vitest run tests/backend/<file>.test.ts -t "<test name>"` |
-| E2E | `npx playwright test` |
+| Unit + backend tests (Vitest + `convex-test`) | `npm test` |
+| Single test file / test name | `npx vitest run tests/backend/<file>.test.ts -t "<test name>"` |
+| E2E (starts `npm run dev` itself) | `npm run test:e2e` |
 | Single E2E test | `npx playwright test tests/e2e/<file>.spec.ts -g "<test name>"` |
-| Check before commit | `npm run typecheck && npm run lint && npm test` |
+| Check before commit | `npm run check` (typecheck + lint + test) |
+
+Testing notes:
+- `convex-test` runs in the `edge-runtime` Vitest environment. Backend tests import Convex modules through [tests/backend/modules.ts](tests/backend/modules.ts), which globs `convex/` including `_generated/`.
+- `convex/_generated/` is committed. Rerun `npx convex codegen` (or keep `npm run convex` running) after changing `convex/` files, or type checks and tests break.
+- Playwright browsers are installed separately: `npx playwright install chromium`.
 
 ## Secrets
 
 - `ANTHROPIC_API_KEY`, Clerk, Sentry and Inngest keys live in `.env.local` and in Convex/Vercel environment settings. Keep `.env.example` updated with variable **names only**.
 - The Anthropic key is used only server-side (Convex actions / Inngest), never in browser code.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

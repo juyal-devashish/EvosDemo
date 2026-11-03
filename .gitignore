@@ -1,13 +1,32 @@
+# dependencies
 node_modules/
+.pnp
+.pnp.*
+
+# build output
 .next/
 out/
+build/
 dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# testing
 coverage/
-.env*
-!.env.example
-.vercel/
-.convex/
 playwright-report/
 test-results/
 blob-report/
+playwright/.cache/
+
+# env and secrets (names-only template is committed)
+.env*
+!.env.example
+*.pem
+
+# platforms
+.vercel/
+.convex/
+
+# misc
 .DS_Store
+npm-debug.log*
