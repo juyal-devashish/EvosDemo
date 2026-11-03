@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { describeError, type ErrorContext } from "../errors";
 import { LEVEL, shortHash } from "../labels";
 import { useMounted } from "../useMounted";
 
@@ -41,13 +42,13 @@ export default function QaPage() {
 function useAction<A>(fn: (args: A) => Promise<unknown>) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const run = async (args: A) => {
+  const run = async (args: A, ctx?: ErrorContext) => {
     setBusy(true);
     setError(null);
     try {
       await fn(args);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(describeError(e, ctx));
     } finally {
       setBusy(false);
     }
@@ -164,7 +165,7 @@ function SessionActions({ sessionId }: { sessionId: Id<"sessions"> }) {
                       <button
                         className="button-primary"
                         disabled={promote.busy}
-                        onClick={() => promote.run({ sessionId, manifestHash: r.manifestHash })}
+                        onClick={() => promote.run({ sessionId, manifestHash: r.manifestHash }, { operatorVersion: r.operatorVersion })}
                         data-testid={`promote-${r.operatorVersion}`}
                       >
                         Authorize supervised
@@ -174,7 +175,7 @@ function SessionActions({ sessionId }: { sessionId: Id<"sessions"> }) {
                       label="Request proposal"
                       cost="1 real API call, about $0.02"
                       disabled={request.busy}
-                      onRun={() => request.run({ sessionId, manifestHash: r.manifestHash })}
+                      onRun={() => request.run({ sessionId, manifestHash: r.manifestHash }, { operatorVersion: r.operatorVersion })}
                     />
                   </div>
                 </td>
@@ -212,7 +213,7 @@ function SuiteRuns() {
             label={`Run rs-1.0 on ${m.operatorVersion}`}
             cost="80 real API calls, about $1.85"
             disabled={start.busy}
-            onRun={() => start.run({ manifestHash: m.manifestHash })}
+            onRun={() => start.run({ manifestHash: m.manifestHash }, { operatorVersion: m.operatorVersion })}
           />
         ))}
       </div>
