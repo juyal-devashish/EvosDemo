@@ -39,3 +39,6 @@ npm-debug.log*
 .agents/
 .claude/skills/
 skills-lock.json
+
+# Written per machine by `npx convex ai-files install`
+convex/_generated/ai/
