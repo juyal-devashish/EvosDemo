@@ -25,6 +25,7 @@ import type * as results from "../results.js";
 import type * as review from "../review.js";
 import type * as sessions from "../sessions.js";
 import type * as suite from "../suite.js";
+import type * as telemetry from "../telemetry.js";
 
 import type {
   ApiFromModules,
@@ -50,6 +51,7 @@ declare const fullApi: ApiFromModules<{
   review: typeof review;
   sessions: typeof sessions;
   suite: typeof suite;
+  telemetry: typeof telemetry;
 }>;
 
 /**
