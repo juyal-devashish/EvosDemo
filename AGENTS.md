@@ -10,7 +10,7 @@ Guidance for AI coding agents (Claude Code, Codex, Cursor, etc.) working in this
 - Build in the order of SPEC §14 (hardest guarantee first). Don't start UI work before the backend guarantees and their tests pass.
 - **For any UI work, follow [UI-GUIDE.md](docs/UI-GUIDE.md):** palette and CSS tokens (§3, §11), typography (§4), layout (§5), the operator card (§7) and the evidence panel (§9). Check finished screens against its review checklist (§13). Inspired by Evos's public site, the project must use its own branding: no Evos logo, and never present it as an official Evos product.
 
-Stack: TypeScript (strict), Next.js/React, Convex, Inngest, Clerk, Sentry, Playwright, Vitest + `convex-test`, Vercel, Claude API (`@anthropic-ai/sdk`, version pinned).
+Stack: TypeScript (strict), Next.js/React, Convex (including scheduled fan-out and the shift boundary, instead of SPEC §2's Inngest; see docs/plan.md steps 4 and 7), Clerk, Sentry, Playwright, Vitest + `convex-test`, Vercel, Claude API (`@anthropic-ai/sdk`, version pinned).
 
 ## Working style
 
@@ -91,8 +91,8 @@ Testing notes:
 
 ## Secrets
 
-- `ANTHROPIC_API_KEY`, Clerk, Sentry and Inngest keys live in `.env.local` and in Convex/Vercel environment settings. Keep `.env.example` updated with variable **names only**.
-- The Anthropic key is used only server-side (Convex actions / Inngest), never in browser code.
+- `ANTHROPIC_API_KEY`, Clerk and Sentry keys live in `.env.local` and in Convex/Vercel environment settings. Keep `.env.example` updated with variable **names only**.
+- The Anthropic key is used only server-side (Convex actions), never in browser code.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
