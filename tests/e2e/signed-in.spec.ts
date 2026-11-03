@@ -15,7 +15,10 @@ async function signInAs(page: Page, role: "qa" | "planner") {
   test.skip(user === null, `E2E_${role.toUpperCase()}_EMAIL/PASSWORD not set`);
   await setupClerkTestingToken({ page });
   await page.goto("/");
-  await clerk.signIn({ page, signInParams: { strategy: "password", ...user! } });
+  await clerk.loaded({ page });
+  // Ticket sign-in (created with the secret key): no password or device
+  // verification step, which a fresh test browser would otherwise hit.
+  await clerk.signIn({ page, emailAddress: user!.identifier });
   await page.goto("/");
   await expect(page.getByTestId("role")).toHaveText(role);
 }
@@ -44,7 +47,7 @@ test("headline: the replay's refused action shows its evidence, and screen equal
   await page.goto("/");
   await page.getByTestId("evidence-link").first().click();
   await expect(page).toHaveURL(new RegExp(`/evidence/${actionId}$`));
-  await expect(page.getByText(/^Fault injection\./)).toBeVisible();
+  await expect(page.getByRole("note").filter({ hasText: "Fault injection." }).first()).toBeVisible();
   await expect(page.getByTestId("headline")).toContainText("Refused before execution");
   await expect(page.getByTestId("reason")).toHaveText(e.action.refusalReason!);
   await expect(page.getByTestId("executed")).toHaveText("no");
