@@ -406,7 +406,7 @@ These are claims about the monitor's statistical behavior on resampled pools wit
 - **Clerk:** the development instance works on the Vercel domain without allowed-origins changes.
 - **The user ran the production steps** (`convex deploy`, `env set --prod`, `import --prod`, Vercel env vars). Claude Code's auto-mode classifier blocks those for the agent.
 - **Verified:** all 8 Playwright tests pass against production (`E2E_BASE_URL`).
-- **Demo video:** [docs/demo.mp4](docs/demo.mp4), a silent walkthrough with captions, recorded from the live site by `scripts/record-demo.ts`. It's read-only, signs in as the qa test user, and covers both acts and recovery.
+- **Demo video:** recorded as a Loom by the user. `scripts/record-demo.ts` can still produce a silent, captioned walkthrough of the live site (read-only, signs in as the qa test user).
 
 ---
 
