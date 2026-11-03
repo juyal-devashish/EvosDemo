@@ -2,7 +2,10 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import {
   actionState,
+  attemptStatus,
   factoryFields,
+  provenance,
+  usage,
   executionResult,
   guardrailFailure,
   manifestFields,
@@ -76,6 +79,10 @@ export default defineSchema({
     shift: v.number(),
     latestRevisionId: v.optional(v.id("proposalRevisions")),
     revisionCount: v.number(),
+    /** Operator proposals: the model call that produced it. */
+    attemptId: v.optional(v.id("attempts")),
+    /** Server-recorded data view actually sent to the model (T4). */
+    provenance: v.optional(provenance),
   }).index("by_session", ["sessionId"]),
 
   /** Immutable. An edit creates a new revision (§9.3). */
@@ -178,6 +185,48 @@ export default defineSchema({
     scenarioIds: v.array(v.string()),
     recordedAt: v.number(),
   }).index("by_manifest", ["manifestHash", "suiteVersion"]),
+
+  /**
+   * One model call (SPEC §8). Step 4 links attempts to trials; the verdict
+   * uses each trial's first attempt, and retries never replace it.
+   */
+  attempts: defineTable({
+    sessionId: v.id("sessions"),
+    trialId: v.optional(v.string()),
+    n: v.number(),
+    manifestHash: v.string(),
+    status: attemptStatus,
+    maxCostUsd: v.number(),
+    reservationId: v.optional(v.id("budgetReservations")),
+    usage: v.optional(usage),
+    costUsd: v.optional(v.number()),
+    stopReason: v.optional(v.union(v.string(), v.null())),
+    detail: v.optional(v.string()),
+    proposalId: v.optional(v.id("proposals")),
+    startedAt: v.number(),
+    finishedAt: v.optional(v.number()),
+  })
+    .index("by_session", ["sessionId"])
+    .index("by_trial", ["trialId", "n"]),
+
+  /** Global spend ledger (one row). Hard cap enforced on reservation (SPEC §11). */
+  budget: defineTable({
+    key: v.literal("global"),
+    capUsd: v.number(),
+    spentUsd: v.number(),
+    reservedUsd: v.number(),
+  }).index("by_key", ["key"]),
+
+  budgetReservations: defineTable({
+    sessionId: v.id("sessions"),
+    attemptId: v.id("attempts"),
+    model: v.string(),
+    maxCostUsd: v.number(),
+    state: v.union(v.literal("open"), v.literal("reconciled"), v.literal("lost")),
+    actualCostUsd: v.optional(v.number()),
+    createdAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+  }).index("by_state", ["state"]),
 
   audit: defineTable({
     sessionId: v.id("sessions"),

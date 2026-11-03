@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { GUARDRAIL_VERSION } from "../checks/guardrails";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, mutation, type MutationCtx } from "./_generated/server";
 import { requireRole, systemActor, type Actor } from "./auth";
 import { checkPlan } from "./lib/factory";
@@ -56,31 +56,51 @@ export const create = internalMutation({
     trigger: v.string(),
     ...plan,
   },
-  handler: async (ctx, { sessionId, manifestHash, trigger, ...body }) => {
-    const session = await getSession(ctx, sessionId);
-    const manifest = await ctx.db
-      .query("manifests")
-      .withIndex("by_hash", (q) => q.eq("manifestHash", manifestHash))
-      .unique();
-    if (manifest === null) throw new ConvexError({ code: "not_found", manifestHash });
-    const proposalId = await ctx.db.insert("proposals", {
-      sessionId,
-      manifestHash,
-      scope: manifest.scope,
-      trigger,
-      shift: session.currentShift,
-      revisionCount: 0,
-    });
-    const revisionId = await insertRevision(ctx, {
-      sessionId,
-      proposalId,
-      revisionNumber: 1,
-      author: systemActor(`operator:${manifest.operatorVersion}`),
-      plan: body,
-    });
-    return { proposalId, revisionId };
-  },
+  handler: async (ctx, { sessionId, manifestHash, trigger, ...body }) =>
+    createOperatorProposal(ctx, { sessionId, manifestHash, trigger, plan: body }),
 });
+
+/**
+ * Insert an operator proposal and its first revision. Shared with
+ * `operator.finishAttempt`, which creates the proposal in the same
+ * transaction that settles the model call's budget reservation.
+ */
+export async function createOperatorProposal(
+  ctx: MutationCtx,
+  args: {
+    sessionId: Id<"sessions">;
+    manifestHash: string;
+    trigger: string;
+    plan: Plan;
+    attemptId?: Id<"attempts">;
+    provenance?: Doc<"proposals">["provenance"];
+  },
+) {
+  const session = await getSession(ctx, args.sessionId);
+  const manifest = await ctx.db
+    .query("manifests")
+    .withIndex("by_hash", (q) => q.eq("manifestHash", args.manifestHash))
+    .unique();
+  if (manifest === null) throw new ConvexError({ code: "not_found", manifestHash: args.manifestHash });
+  const proposalId = await ctx.db.insert("proposals", {
+    sessionId: args.sessionId,
+    manifestHash: args.manifestHash,
+    scope: manifest.scope,
+    trigger: args.trigger,
+    shift: session.currentShift,
+    revisionCount: 0,
+    attemptId: args.attemptId,
+    provenance: args.provenance,
+  });
+  const revisionId = await insertRevision(ctx, {
+    sessionId: args.sessionId,
+    proposalId,
+    revisionNumber: 1,
+    author: systemActor(`operator:${manifest.operatorVersion}`),
+    plan: args.plan,
+  });
+  return { proposalId, revisionId };
+}
 
 /** A reviewer edits the latest revision. Earlier approvals don't apply to the result. */
 export const edit = mutation({

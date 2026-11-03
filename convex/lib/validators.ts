@@ -141,3 +141,29 @@ export const factoryFields = {
 };
 
 export const seedJob = v.object({ ...scheduleEntry.fields, partFamily: v.string(), frozen: v.boolean() });
+
+export const attemptStatus = v.union(
+  v.literal("pending"),
+  v.literal("ok"),
+  v.literal("api_error"),
+  v.literal("timeout"),
+  v.literal("refusal"),
+  v.literal("parse_fail"),
+  v.literal("budget_blocked"),
+);
+
+export const usage = v.object({
+  input_tokens: v.number(),
+  output_tokens: v.number(),
+  cache_creation_input_tokens: v.union(v.number(), v.null()),
+  cache_read_input_tokens: v.union(v.number(), v.null()),
+});
+
+export const provenance = v.object({
+  sources: v.array(
+    v.object({
+      source: v.union(v.literal("erp_routing"), v.literal("erp_stock"), v.literal("mes_cycle_times")),
+      ageShifts: v.number(),
+    }),
+  ),
+});

@@ -15,10 +15,12 @@
     "convex": "convex dev"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.4.0",
     "convex": "^1.49.0",
     "next": "16.4.4",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
