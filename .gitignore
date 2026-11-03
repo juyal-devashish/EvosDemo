@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.env*
+!.env.example
+.vercel/
+.convex/
+playwright-report/
+test-results/
+blob-report/
+.DS_Store
