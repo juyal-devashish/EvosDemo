@@ -17,12 +17,12 @@ type Key = { sessionId: Id<"sessions">; manifestHash: string; scope: Scope };
 
 const SCOPE: Scope = "scheduling";
 
-async function setLevel(
+export async function setLevel(
   ctx: MutationCtx,
   key: Key,
   change: {
     to: PermissionLevel;
-    trigger: "qa_authorization" | "monitor_signal" | "fault_injection_override";
+    trigger: "qa_authorization" | "monitor_signal" | "fault_injection_override" | "suite_harness";
     actor: Actor;
     evidenceIds: string[];
     note?: string;

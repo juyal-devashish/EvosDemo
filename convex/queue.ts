@@ -25,7 +25,7 @@ async function loadLatestRevision(
   return { revision, proposal };
 }
 
-async function enqueue(
+export async function enqueue(
   ctx: MutationCtx,
   args: {
     session: Doc<"sessions">;

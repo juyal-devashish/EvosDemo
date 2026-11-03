@@ -166,12 +166,66 @@ export default defineSchema({
       v.literal("qa_authorization"),
       v.literal("monitor_signal"),
       v.literal("fault_injection_override"),
+      /** Only inside an isolated suite trial session, to exercise the execution path. */
+      v.literal("suite_harness"),
     ),
     actor,
     evidenceIds: v.array(v.string()),
     note: v.optional(v.string()),
     changedAt: v.number(),
   }).index("by_key", ["sessionId", "manifestHash", "scope"]),
+
+  /** One release-suite run of one manifest (SPEC §8). */
+  suiteRuns: defineTable({
+    /** Coordination session for the run's own records; each trial has its own session. */
+    sessionId: v.id("sessions"),
+    manifestHash: v.string(),
+    suiteVersion: v.string(),
+    scenarioIds: v.array(v.string()),
+    trialsPerScenario: v.number(),
+    state: v.union(v.literal("running"), v.literal("complete"), v.literal("cancelled")),
+    startedBy: actor,
+    startedAt: v.number(),
+    finishedAt: v.optional(v.number()),
+    verdict: v.optional(
+      v.object({
+        kind: v.union(v.literal("passed"), v.literal("failed"), v.literal("incomplete")),
+        text: v.string(),
+        failures: v.array(
+          v.object({ checkId: v.string(), scenarioId: v.string(), failedTrials: v.number(), trials: v.number() }),
+        ),
+        missing: v.object({ count: v.number(), reasons: v.record(v.string(), v.number()) }),
+        perScenario: v.array(
+          v.object({
+            scenarioId: v.string(),
+            trials: v.number(),
+            passed: v.number(),
+            failed: v.number(),
+            missing: v.number(),
+            upperBound95: v.optional(v.number()),
+          }),
+        ),
+      }),
+    ),
+  }).index("by_manifest", ["manifestHash"]),
+
+  /** One trial: stable id, its own seeded session, judged on its first attempt. */
+  trials: defineTable({
+    suiteRunId: v.id("suiteRuns"),
+    trialKey: v.string(),
+    scenarioId: v.string(),
+    index: v.number(),
+    expectedOutcome: v.string(),
+    sessionId: v.id("sessions"),
+    state: v.union(v.literal("pending"), v.literal("passed"), v.literal("failed"), v.literal("missing")),
+    failures: v.optional(v.array(v.object({ id: v.string(), message: v.string(), orderId: v.optional(v.string()) }))),
+    missingReason: v.optional(v.string()),
+    firstAttemptId: v.optional(v.id("attempts")),
+    revisionId: v.optional(v.id("proposalRevisions")),
+    finishedAt: v.optional(v.number()),
+  })
+    .index("by_run", ["suiteRunId", "state"])
+    .index("by_key", ["trialKey"]),
 
   /**
    * Release-suite verdicts per manifest. Step 4 writes these from real suite
@@ -192,7 +246,7 @@ export default defineSchema({
    */
   attempts: defineTable({
     sessionId: v.id("sessions"),
-    trialId: v.optional(v.string()),
+    trialId: v.optional(v.id("trials")),
     n: v.number(),
     manifestHash: v.string(),
     status: attemptStatus,

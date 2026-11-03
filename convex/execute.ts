@@ -74,121 +74,130 @@ async function authorize(
 
 export const executeAction = internalMutation({
   args: { sessionId: v.id("sessions"), actionId: v.id("actions") },
-  handler: async (ctx, { sessionId, actionId }): Promise<ExecuteOutcome> => {
-    const actor = systemActor("executeAction");
-    const action = await getInSession(ctx, sessionId, actionId);
+  handler: (ctx, args): Promise<ExecuteOutcome> => executeActionInTransaction(ctx, args),
+});
 
-    // Step 3, checked first: a retry returns the stored result, whatever
-    // has changed since. Checking it after steps 1–2 could report a refusal
-    // for an action that already executed.
-    const prior = await ctx.db
-      .query("executions")
-      .withIndex("by_action", (q) => q.eq("actionId", actionId))
-      .unique();
-    if (prior !== null) {
-      return {
-        executionId: prior._id,
-        result: prior.result,
-        refusalReason: prior.refusalReason,
-        deduplicated: true,
+/**
+ * The body of executeAction, for callers that are already inside a
+ * mutation (the suite harness). Same transaction as the caller.
+ */
+export async function executeActionInTransaction(
+  ctx: MutationCtx,
+  { sessionId, actionId }: { sessionId: Id<"sessions">; actionId: Id<"actions"> },
+): Promise<ExecuteOutcome> {
+  const actor = systemActor("executeAction");
+  const action = await getInSession(ctx, sessionId, actionId);
+
+  // Step 3, checked first: a retry returns the stored result, whatever
+  // has changed since. Checking it after steps 1–2 could report a refusal
+  // for an action that already executed.
+  const prior = await ctx.db
+    .query("executions")
+    .withIndex("by_action", (q) => q.eq("actionId", actionId))
+    .unique();
+  if (prior !== null) {
+    return {
+      executionId: prior._id,
+      result: prior.result,
+      refusalReason: prior.refusalReason,
+      deduplicated: true,
+    };
+  }
+  if (action.state !== "queued") {
+    throw new ConvexError({ code: "invariant", message: `action ${actionId} is ${action.state} with no execution record` });
+  }
+
+  const session = await getSession(ctx, sessionId);
+  const revision = await getInSession(ctx, sessionId, action.proposalRevisionId);
+  const proposal = await getInSession(ctx, sessionId, revision.proposalId);
+
+  let decision = await authorize(ctx, action, proposal);
+
+  // Step 4: re-run G1–G8 on current state.
+  let failures: GuardrailFailure[] = [];
+  if (decision.kind === "proceed") {
+    const check = await checkPlan(ctx, sessionId, proposal, revision);
+    failures = check.failures;
+    if (!check.ok) {
+      const approval = action.approvalId ? await ctx.db.get(action.approvalId) : null;
+      const base = approval?.baseStateVersion ?? revision.baseStateVersion;
+      decision = {
+        kind: "refuse",
+        reason: base !== session.stateVersion ? "stale_approval" : "guardrail_failed",
+        evidenceIds: [...decision.evidenceIds, revision._id],
+        failures,
       };
     }
-    if (action.state !== "queued") {
-      throw new ConvexError({ code: "invariant", message: `action ${actionId} is ${action.state} with no execution record` });
-    }
+  }
 
-    const session = await getSession(ctx, sessionId);
-    const revision = await getInSession(ctx, sessionId, action.proposalRevisionId);
-    const proposal = await getInSession(ctx, sessionId, revision.proposalId);
+  const now = Date.now();
+  const before = session.stateVersion;
 
-    let decision = await authorize(ctx, action, proposal);
-
-    // Step 4: re-run G1–G8 on current state.
-    let failures: GuardrailFailure[] = [];
-    if (decision.kind === "proceed") {
-      const check = await checkPlan(ctx, sessionId, proposal, revision);
-      failures = check.failures;
-      if (!check.ok) {
-        const approval = action.approvalId ? await ctx.db.get(action.approvalId) : null;
-        const base = approval?.baseStateVersion ?? revision.baseStateVersion;
-        decision = {
-          kind: "refuse",
-          reason: base !== session.stateVersion ? "stale_approval" : "guardrail_failed",
-          evidenceIds: [...decision.evidenceIds, revision._id],
-          failures,
-        };
-      }
-    }
-
-    const now = Date.now();
-    const before = session.stateVersion;
-
-    // Step 6: refusal. Record it and return normally.
-    if (decision.kind === "refuse") {
-      await ctx.db.patch(actionId, { state: "refused", refusalReason: decision.reason });
-      const executionId = await ctx.db.insert("executions", {
-        sessionId,
-        actionId,
-        result: "refused",
-        refusalReason: decision.reason,
-        guardrailFailures: decision.failures ?? [],
-        evidenceIds: decision.evidenceIds,
-        stateVersionBefore: before,
-        stateVersionAfter: before,
-        executedAt: now,
-      });
-      await writeAudit(ctx, {
-        sessionId,
-        kind: "action.refused",
-        actor,
-        refs: [actionId, executionId, ...decision.evidenceIds],
-        detail: decision.reason,
-      });
-      return { executionId, result: "refused", refusalReason: decision.reason, deduplicated: false };
-    }
-
-    // Injected ERP write failure (fault scenario): a committed `failed`
-    // result with no business-state change.
-    if (session.injectWriteFailure) {
-      await ctx.db.patch(actionId, { state: "failed" });
-      const executionId = await ctx.db.insert("executions", {
-        sessionId,
-        actionId,
-        result: "failed",
-        guardrailFailures: [],
-        evidenceIds: decision.evidenceIds,
-        stateVersionBefore: before,
-        stateVersionAfter: before,
-        executedAt: now,
-      });
-      await writeAudit(ctx, { sessionId, kind: "action.failed", actor, refs: [actionId, executionId], detail: "injected ERP write failure" });
-      return { executionId, result: "failed", deduplicated: false };
-    }
-
-    // Step 5: write exactly the revision's diff.
-    const { movable } = await loadJobs(ctx, sessionId);
-    const diff = scheduleDiff(movable.map(toJob), revision.schedule);
-    await applyDiff(ctx, sessionId, movable, diff);
-    await ctx.db.patch(sessionId, { stateVersion: before + 1 });
-    await ctx.db.patch(actionId, { state: "executed" });
+  // Step 6: refusal. Record it and return normally.
+  if (decision.kind === "refuse") {
+    await ctx.db.patch(actionId, { state: "refused", refusalReason: decision.reason });
     const executionId = await ctx.db.insert("executions", {
       sessionId,
       actionId,
-      result: "executed",
-      guardrailFailures: [],
+      result: "refused",
+      refusalReason: decision.reason,
+      guardrailFailures: decision.failures ?? [],
       evidenceIds: decision.evidenceIds,
       stateVersionBefore: before,
-      stateVersionAfter: before + 1,
-      diff,
+      stateVersionAfter: before,
       executedAt: now,
     });
     await writeAudit(ctx, {
       sessionId,
-      kind: "action.executed",
+      kind: "action.refused",
       actor,
-      refs: [actionId, executionId, revision._id],
-      detail: `+${diff.added.length} −${diff.removed.length} jobs`,
+      refs: [actionId, executionId, ...decision.evidenceIds],
+      detail: decision.reason,
     });
-    return { executionId, result: "executed", deduplicated: false };
-  },
-});
+    return { executionId, result: "refused", refusalReason: decision.reason, deduplicated: false };
+  }
+
+  // Injected ERP write failure (fault scenario): a committed `failed`
+  // result with no business-state change.
+  if (session.injectWriteFailure) {
+    await ctx.db.patch(actionId, { state: "failed" });
+    const executionId = await ctx.db.insert("executions", {
+      sessionId,
+      actionId,
+      result: "failed",
+      guardrailFailures: [],
+      evidenceIds: decision.evidenceIds,
+      stateVersionBefore: before,
+      stateVersionAfter: before,
+      executedAt: now,
+    });
+    await writeAudit(ctx, { sessionId, kind: "action.failed", actor, refs: [actionId, executionId], detail: "injected ERP write failure" });
+    return { executionId, result: "failed", deduplicated: false };
+  }
+
+  // Step 5: write exactly the revision's diff.
+  const { movable } = await loadJobs(ctx, sessionId);
+  const diff = scheduleDiff(movable.map(toJob), revision.schedule);
+  await applyDiff(ctx, sessionId, movable, diff);
+  await ctx.db.patch(sessionId, { stateVersion: before + 1 });
+  await ctx.db.patch(actionId, { state: "executed" });
+  const executionId = await ctx.db.insert("executions", {
+    sessionId,
+    actionId,
+    result: "executed",
+    guardrailFailures: [],
+    evidenceIds: decision.evidenceIds,
+    stateVersionBefore: before,
+    stateVersionAfter: before + 1,
+    diff,
+    executedAt: now,
+  });
+  await writeAudit(ctx, {
+    sessionId,
+    kind: "action.executed",
+    actor,
+    refs: [actionId, executionId, revision._id],
+    detail: `+${diff.added.length} −${diff.removed.length} jobs`,
+  });
+  return { executionId, result: "executed", deduplicated: false };
+}

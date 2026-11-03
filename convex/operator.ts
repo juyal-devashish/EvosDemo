@@ -38,7 +38,7 @@ export const beginAttempt = internalMutation({
     manifestHash: v.string(),
     model: v.string(),
     maxCostUsd: v.number(),
-    trialId: v.optional(v.string()),
+    trialId: v.optional(v.id("trials")),
     n: v.number(),
   },
   handler: async (ctx, args) => {
@@ -138,7 +138,7 @@ export const propose = internalAction({
     sessionId: v.id("sessions"),
     manifestHash: v.string(),
     trigger: v.string(),
-    trialId: v.optional(v.string()),
+    trialId: v.optional(v.id("trials")),
     n: v.optional(v.number()),
   },
   handler: async (ctx, args): Promise<ProposeResult> => {

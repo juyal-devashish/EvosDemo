@@ -12,7 +12,7 @@ const sessionKind = v.union(
   v.literal("test"),
 );
 
-async function insertSession(
+export async function insertSession(
   ctx: MutationCtx,
   actor: Actor,
   args: { label: string; kind: "suite" | "replay" | "demo" | "test"; faultInjection: boolean; injectWriteFailure?: boolean },
@@ -67,33 +67,36 @@ export const seed = internalMutation({
  */
 export const seedFromScenario = internalMutation({
   args: { scenarioId: v.string(), label: v.optional(v.string()) },
-  handler: async (ctx, { scenarioId, label }) => {
-    const scenario = SCENARIOS.find((s) => s.id === scenarioId);
-    if (scenario === undefined) throw new ConvexError({ code: "not_found", scenarioId });
-    verifyScenario(scenario);
-    const { snapshot } = scenario;
-    const sessionId = await insertSession(ctx, systemActor("seed"), {
-      label: label ?? `rs-1.0/${scenarioId}`,
-      kind: "suite",
-      faultInjection: false,
-      injectWriteFailure: scenario.injectWriteFailure,
-    });
-    await ctx.db.patch(sessionId, { currentShift: snapshot.nowShift });
-    await ctx.db.insert("factory", {
-      sessionId,
-      lines: snapshot.lines,
-      orders: snapshot.orders,
-      standardCycleTimes: snapshot.standardCycleTimes,
-      mesObservations: snapshot.mesObservations,
-      stock: snapshot.stock,
-      arrivals: snapshot.arrivals,
-      reservations: snapshot.reservations,
-      dataAsOfShift: snapshot.dataAsOfShift,
-    });
-    for (const job of snapshot.frozenJobs) await ctx.db.insert("jobs", { sessionId, ...job, frozen: true });
-    return sessionId;
-  },
+  handler: async (ctx, { scenarioId, label }) => insertScenarioSession(ctx, scenarioId, label),
 });
+
+/** Seed one isolated suite session from an rs-1.0 scenario (shared with suite.start). */
+export async function insertScenarioSession(ctx: MutationCtx, scenarioId: string, label?: string) {
+  const scenario = SCENARIOS.find((s) => s.id === scenarioId);
+  if (scenario === undefined) throw new ConvexError({ code: "not_found", scenarioId });
+  verifyScenario(scenario);
+  const { snapshot } = scenario;
+  const sessionId = await insertSession(ctx, systemActor("seed"), {
+    label: label ?? `rs-1.0/${scenarioId}`,
+    kind: "suite",
+    faultInjection: false,
+    injectWriteFailure: scenario.injectWriteFailure,
+  });
+  await ctx.db.patch(sessionId, { currentShift: snapshot.nowShift });
+  await ctx.db.insert("factory", {
+    sessionId,
+    lines: snapshot.lines,
+    orders: snapshot.orders,
+    standardCycleTimes: snapshot.standardCycleTimes,
+    mesObservations: snapshot.mesObservations,
+    stock: snapshot.stock,
+    arrivals: snapshot.arrivals,
+    reservations: snapshot.reservations,
+    dataAsOfShift: snapshot.dataAsOfShift,
+  });
+  for (const job of snapshot.frozenJobs) await ctx.db.insert("jobs", { sessionId, ...job, frozen: true });
+  return sessionId;
+}
 
 export const get = query({
   args: { sessionId: v.id("sessions") },
