@@ -1,4 +1,4 @@
-/* Tokens from UI-GUIDE.md §3 and §11. Light theme only (§12: no dark admin theme). */
+/* Design tokens: warm-white canvas, charcoal ink, one blue accent. Light theme only. */
 :root {
   --canvas: #fffffc;
   --ink: #1e1e1e;
@@ -385,7 +385,7 @@ th.num {
   white-space: nowrap;
 }
 
-/* ── Buttons (UI-GUIDE §6) ─────────────────────────────────────────── */
+/* ── Buttons ─────────────────────────────────────────── */
 
 .button-primary,
 .button-secondary {
@@ -458,7 +458,7 @@ select.field {
   font: inherit;
 }
 
-/* ── Review workspace and operator card (UI-GUIDE §5, §7) ──────────── */
+/* ── Review workspace and operator card ──────────── */
 
 .workspace {
   display: grid;
@@ -532,7 +532,7 @@ details summary {
   font-size: 14px;
 }
 
-/* ── Replay timeline (UI-GUIDE §9) ─────────────────────────────────── */
+/* ── Replay timeline ─────────────────────────────────── */
 
 .day-bars {
   display: grid;
