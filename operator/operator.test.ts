@@ -47,7 +47,7 @@ describe("callOperator", () => {
     const p = calls[0];
     expect(p.model).toBe(m.model);
     expect(p.max_tokens).toBe(m.maxTokens);
-    expect((p.output_config as { effort: string }).effort).toBe("low");
+    expect((p.output_config as { effort: string }).effort).toBe(m.effort);
     expect((p.output_config as { format: { type: string } }).format.type).toBe("json_schema");
     for (const k of ["temperature", "top_p", "top_k", "fallbacks", "betas", "thinking"]) expect(p).not.toHaveProperty(k);
   });
@@ -99,7 +99,7 @@ describe("manifests", () => {
 
   test("changing any field changes the hash", async () => {
     const { manifestHash, ...body } = await opV2();
-    expect((await hashManifest({ ...body, effort: "medium" })).manifestHash).not.toBe(manifestHash);
+    expect((await hashManifest({ ...body, effort: "high" })).manifestHash).not.toBe(manifestHash);
     expect((await hashManifest({ ...body, promptHash: "x" })).manifestHash).not.toBe(manifestHash);
   });
 });
@@ -147,8 +147,8 @@ describe("pricing", () => {
   test("unknown model has no pricing → refuses", () => expect(() => maxCostUsd("other", 1, 1)).toThrow(/no pricing/));
 });
 
-test("manifests use claude-sonnet-5-5 at low effort, and it has pricing", async () => {
+test("manifests use claude-sonnet-5-5 at medium effort, and it has pricing", async () => {
   const m = await opV2();
-  expect(m).toMatchObject({ model: "claude-sonnet-5-5", effort: "low" });
+  expect(m).toMatchObject({ model: "claude-sonnet-5-5", effort: "medium" });
   expect(actualCostUsd(m.model, USAGE)).toBeCloseTo(1200 * 2e-6 + 800 * 10e-6, 10);
 });

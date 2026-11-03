@@ -33,9 +33,10 @@ export async function hashManifest(body: ManifestBody): Promise<Manifest> {
 const common = {
   // Chosen by the user after the step 3 cost pilot (plan.md). Sonnet 5.5
   // thinks adaptively by default; effort is set explicitly because its
-  // default is high.
+  // default is high. Raised from low to medium by the user after the
+  // low-effort retest produced a weak impossible-deadline plan.
   model: "claude-sonnet-5-5",
-  effort: "low" as const,
+  effort: "medium" as const,
   // Thinking counts toward max_tokens. Pilot plans used ~500–730 output
   // tokens; this leaves headroom without inflating the budget reservation.
   maxTokens: 6000,
