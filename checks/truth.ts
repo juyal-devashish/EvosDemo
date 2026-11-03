@@ -2,7 +2,7 @@ import { EPS, type DataSource, type FactorySnapshot, type Plan, type ScheduledJo
 import type { DataViewPolicy } from "./guardrails";
 
 // Truth checks (SPEC §7): screen, stored data and executed changes agree.
-// T2 (screen = stored values) is a Playwright test in step 5.
+// T2 (screen = stored values) is checked by Playwright (tests/e2e).
 
 export type TruthCheckId = "T1" | "T3" | "T4";
 export type TruthFailure = { id: TruthCheckId; message: string; orderId?: string };
