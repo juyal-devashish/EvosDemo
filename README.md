@@ -47,8 +47,8 @@ Real model calls need `ANTHROPIC_API_KEY` set in the Convex environment (`npx co
 
 | Path | Contents |
 |---|---|
-| `SPEC.md` | The design. Source of truth. |
-| `plan.md` | Build steps, what was decided, and every real run with its cost |
+| `docs/SPEC.md` | The design. Source of truth. |
+| `docs/plan.md` | Build steps, what was decided, and every real run with its cost |
 | `convex/` | Schema, the atomic `executeAction`, permissions, suite runs, monitor, shift boundary |
 | `checks/` | Guardrails G1–G8, suite checks C1–C4, truth checks (pure functions) |
 | `sim/` | Scheduling model, oracle, scenarios, synthetic reviewer |
