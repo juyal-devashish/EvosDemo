@@ -5,6 +5,7 @@ import { internalMutation, type MutationCtx } from "./_generated/server";
 import { systemActor } from "./auth";
 import { applyDiff, checkPlan, loadJobs, scheduleDiff, toJob } from "./lib/factory";
 import { currentPermission, effectiveLevel, getInSession, getSession, writeAudit } from "./lib/records";
+import { reportEvent } from "./lib/telemetry";
 import type { ExecutionResult, RefusalReason } from "./lib/validators";
 
 // executeAction (SPEC §9.5): one Convex mutation, so one transaction.
@@ -153,6 +154,13 @@ export async function executeActionInTransaction(
       actor,
       refs: [actionId, executionId, ...decision.evidenceIds],
       detail: decision.reason,
+    });
+    await reportEvent(ctx, "action.refused", {
+      sessionId,
+      actionId,
+      executionId,
+      reason: decision.reason,
+      evidenceIds: decision.evidenceIds,
     });
     return { executionId, result: "refused", refusalReason: decision.reason, deduplicated: false };
   }
