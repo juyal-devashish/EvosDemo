@@ -3,6 +3,7 @@ import type { Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query, type MutationCtx } from "./_generated/server";
 import { requireRole, systemActor, type Actor } from "./auth";
 import { currentPermission, effectiveLevel, getSession, writeAudit } from "./lib/records";
+import { reportEvent } from "./lib/telemetry";
 import { manifestFields, type PermissionLevel, type Scope } from "./lib/validators";
 
 // Permission ladder (SPEC §9.4), per sessionId × manifestHash × scope.
@@ -54,6 +55,14 @@ export async function setLevel(
     refs: [changeId, ...change.evidenceIds],
     detail: `${from} → ${change.to} (${change.trigger}) for ${key.manifestHash}`,
   });
+  if (change.to === "demoted") {
+    await reportEvent(ctx, "permission.demoted", {
+      sessionId: key.sessionId,
+      manifestHash: key.manifestHash,
+      permissionChangeId: changeId,
+      evidenceIds: change.evidenceIds,
+    });
+  }
   return changeId;
 }
 
