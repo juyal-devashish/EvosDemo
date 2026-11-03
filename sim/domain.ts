@@ -40,3 +40,11 @@ export type Order = {
   rush: boolean;
   bom: BomLine[];
 };
+
+/** One job placed on a line: a continuous, non-preemptive run (§3). */
+export type ScheduledJob = {
+  orderId: OrderId;
+  lineId: LineId;
+  startHour: Hour;
+  endHour: Hour;
+};
