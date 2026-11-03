@@ -38,3 +38,21 @@ export const LEVEL: Record<string, string> = {
   limited: "Limited autonomy",
   demoted: "Demoted (supervised)",
 };
+
+// Plain-language names for the monitor's statistics, for people who aren't
+// statisticians. The numbers behind them are unchanged.
+
+/** Result of one monitor window. */
+export const WINDOW_STATUS: Record<string, string> = {
+  signal: "Alarm",
+  ok: "Healthy",
+  insufficientData: "Too few plans to judge",
+};
+
+/** Why a permission changed. */
+export const TRIGGER: Record<string, string> = {
+  monitor_signal: "automatic: the monitor's alarm",
+  qa_authorization: "authorized by QA",
+  fault_injection_override: "staged fault injection",
+  suite_harness: "test harness",
+};
