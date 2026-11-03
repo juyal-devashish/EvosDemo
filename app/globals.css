@@ -571,3 +571,15 @@ details summary {
     grid-column: 2;
   }
 }
+
+/* ── Evidence chain ────────────────────────────────────────────────── */
+
+.evidence-chain {
+  list-style: none;
+  display: grid;
+  gap: 16px;
+}
+
+.evidence-step {
+  border-left: 3px solid var(--danger);
+}
