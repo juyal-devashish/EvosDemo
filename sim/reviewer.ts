@@ -18,7 +18,7 @@ export type SyntheticReview = { agreed: boolean; shouldEdit: boolean; reasons: s
 
 /** Why a careful reviewer would edit this plan (deterministic; no randomness). */
 export function editReasons(scenario: SeededScenario, plan: Plan, dataView: DataViewPolicy, durationTolerance: number): string[] {
-  const reasons = evaluatePlan(scenario, plan, dataView)
+  const reasons: string[] = evaluatePlan(scenario, plan, dataView)
     .failures.filter((f) => f.id.startsWith("C") || f.id.startsWith("T"))
     .map((f) => f.id);
   const ct = cycleTimeLookup(scenario.trueCycleTimes);
