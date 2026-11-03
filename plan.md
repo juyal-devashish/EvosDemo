@@ -339,7 +339,7 @@ These are claims about the monitor's statistical behavior on resampled pools wit
 
 ---
 
-## Step 7 — Shift boundary, fault-injection replay and recovery
+## Step 7 — Shift boundary, fault-injection replay and recovery ✅
 
 **Build**
 - `inngest/shiftBoundary`, with steps that must run in order (§9.6):
@@ -374,6 +374,16 @@ These are claims about the monitor's statistical behavior on resampled pools wit
 - Days 4–6: 0/17 agreed. Every plan failed C4, with durations more than 10% off.
 - At the boundary into day 7, window 1 signalled (P(X ≤ 0 | n = 17, p₀ = 0.9688) ≈ 2.5×10⁻²⁶ ≤ α), and op-v1 was **demoted**. The queued action was then released and **refused: not_permitted**, with the demotion as evidence.
 - Window n is 17, not 18, because each window's last decision is still queued when its boundary runs, so it has no review yet.
+
+**Recovery (80 real op-v2 calls, about $2.13; $7.15 spent in total)**
+- The qa test user authorized op-v2 supervised in the replay session through the QA console (`tests/e2e/tasks`).
+- 80 supervised routine reschedules on drifted SMT-2 snapshots: **78/80 agreed** with the synthetic reviewer. The 2 edits had no check failures; they were pPicky edits. Every attempt succeeded.
+- One-sided 95% Clopper–Pearson lower bound **0.923 ≥ floor 0.90**, with at least 80 fresh reviews, and rs-1.0 (including slow-machine) passed. The qa user then authorized **op-v2 → limited**.
+- Permission history in the session:
+  - op-v1: shadow → limited (fault-injection override)
+  - op-v1: limited → demoted (monitor signal)
+  - op-v2: shadow → supervised (qa)
+  - op-v2: supervised → limited (qa)
 
 ---
 
