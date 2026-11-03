@@ -29,6 +29,8 @@ export function describeError(e: unknown, ctx: ErrorContext = {}): string {
         return "Fault injection is only allowed in sessions flagged for it.";
       case "config":
         return `Server not configured: ${String(data.message ?? "missing setting")}.`;
+      case "insufficient_evidence":
+        return `Not enough recovery evidence: ${String(data.x)}/${String(data.n)} fresh reviews, lower bound ${Number(data.lowerBound).toFixed(3)}. Needs at least ${String(data.minFreshReviews)} reviews and a bound of ${String(data.floor)}. It stays supervised.`;
       case "not_found":
         return "That record no longer exists.";
       default:
