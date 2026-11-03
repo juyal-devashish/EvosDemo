@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as boundary from "../boundary.js";
 import type * as budget from "../budget.js";
 import type * as execute from "../execute.js";
 import type * as lib_factory from "../lib/factory.js";
@@ -37,6 +38,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  boundary: typeof boundary;
   budget: typeof budget;
   execute: typeof execute;
   "lib/factory": typeof lib_factory;
