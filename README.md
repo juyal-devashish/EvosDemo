@@ -70,4 +70,4 @@ npm run test:e2e      # Playwright
 | `app/` | Public results and evidence pages, review panel, QA console |
 | `tests/` | Backend tests (`convex-test`) and Playwright |
 | `scripts/` | Monitor baseline and validation, walkthrough recorder |
-| `docs/` | Spec, build plan, UI guide |
+| `docs/` | Spec and build plan |
