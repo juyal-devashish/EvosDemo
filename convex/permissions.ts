@@ -173,7 +173,7 @@ export const registerManifest = internalMutation({
   },
 });
 
-/** Placeholder writer for suite verdicts; step 4 records these from real suite runs. */
+/** Writes a suite verdict directly. Test fixtures only: real verdicts come from convex/suite.ts. */
 export const recordSuiteVerdict = internalMutation({
   args: {
     sessionId: v.id("sessions"),
