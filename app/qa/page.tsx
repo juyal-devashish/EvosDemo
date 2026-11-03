@@ -137,6 +137,7 @@ function SessionActions({ sessionId }: { sessionId: Id<"sessions"> }) {
   const data = useQuery(api.review.session, { sessionId });
   const promote = useAction(useMutation(api.permissions.promoteToSupervised));
   const request = useAction(useMutation(api.operator.request));
+  const promoteLimited = useAction(useMutation(api.permissions.promoteToLimited));
   if (data === undefined) return <p className="muted">Loading…</p>;
   return (
     <>
@@ -171,6 +172,15 @@ function SessionActions({ sessionId }: { sessionId: Id<"sessions"> }) {
                         Authorize supervised
                       </button>
                     )}
+                    {(r.level === "supervised" || r.level === "demoted") && (
+                      <RecoveryControl
+                        sessionId={sessionId}
+                        manifestHash={r.manifestHash}
+                        busy={promoteLimited.busy}
+                        onPromote={() => promoteLimited.run({ sessionId, manifestHash: r.manifestHash }, { operatorVersion: r.operatorVersion })}
+                        testId={`limited-${r.operatorVersion}`}
+                      />
+                    )}
                     <CostButton
                       label="Request proposal"
                       cost="1 real API call, about $0.02"
@@ -187,9 +197,9 @@ function SessionActions({ sessionId }: { sessionId: Id<"sessions"> }) {
       <p className="small muted section">
         Authorizing needs a passed rs-1.0 verdict for that exact manifest; the backend refuses it otherwise.
       </p>
-      {(promote.error || request.error) && (
+      {(promote.error || request.error || promoteLimited.error) && (
         <p className="notice notice-error section" role="alert">
-          {promote.error ?? request.error}
+          {promote.error ?? request.error ?? promoteLimited.error}
         </p>
       )}
     </>
@@ -249,5 +259,21 @@ function SuiteRuns() {
         </table>
       </div>
     </section>
+  );
+}
+
+/** Recovery evidence (SPEC §10.6) and the qa authorization to limited autonomy. */
+function RecoveryControl({ sessionId, manifestHash, busy, onPromote, testId }: { sessionId: Id<"sessions">; manifestHash: string; busy: boolean; onPromote: () => void; testId: string }) {
+  const ev = useQuery(api.permissions.recoveryStatus, { sessionId, manifestHash });
+  if (ev === undefined) return null;
+  return (
+    <span className="row">
+      <span className="mono small" data-testid={`${testId}-evidence`}>
+        {ev.x}/{ev.n} fresh reviews · bound {ev.lowerBound.toFixed(3)} (need ≥ {ev.minFreshReviews} and ≥ {ev.floor})
+      </span>
+      <button className="button-secondary" onClick={onPromote} disabled={busy} data-testid={testId}>
+        Authorize limited
+      </button>
+    </span>
   );
 }
