@@ -4,7 +4,7 @@ Guidance for AI coding agents (Claude Code, Codex, Cursor, etc.) working in this
 
 ## Project
 
-**Earned Autonomy:** a release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory.
+**EvosDemo:** a release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory.
 
 - **[SPEC.md](SPEC.md) is the source of truth.** Read the relevant section before changing behavior. If code and spec disagree, flag it; don't silently pick one.
 - Build in the order of SPEC §14 (hardest guarantee first). Don't start UI work before the backend guarantees and their tests pass.
