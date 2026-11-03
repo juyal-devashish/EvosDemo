@@ -14,7 +14,7 @@ import { t1CommitmentsMatch, type TruthFailure } from "./truth";
 
 // Evaluate one plan against one rs-1.0 scenario. A trial passes only when
 // every applicable check passes. The execution half of `failure_handled`
-// (failed result, no state change) is evaluated by the suite runner in step 4.
+// (failed result, no state change) is checked by convex/suite.ts#checkFailedWrite.
 
 export type CheckFailure = GuardrailFailure | SuiteCheckFailure | TruthFailure;
 
