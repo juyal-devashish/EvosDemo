@@ -1,7 +1,9 @@
 // Pricing constants for budget reservation (SPEC §11), USD per million tokens.
-// Source: Anthropic first-party pricing for claude-opus-5-5 as listed in the
-// Claude API reference cached 2026-10-06 (input $4, output $20, cache read
-// $0.20; cache writes 1.25× input for 5-minute TTL, 2× for 1-hour).
+// Source: Anthropic first-party pricing as listed in the Claude API
+// reference cached 2026-10-06. claude-sonnet-5-5: input $2, output $10,
+// cache read $0.20. claude-opus-5-5 (used in the step 3 pilot): input $4,
+// output $20, cache read $0.20. Cache writes are 1.25× input for the
+// 5-minute TTL and 2× for 1-hour.
 // Re-check https://platform.claude.com/docs/en/about-claude/pricing before relying on them.
 
 export const PRICING_SOURCE_DATE = "2026-10-06";
@@ -15,6 +17,13 @@ export type ModelPricing = {
 };
 
 export const PRICING: Record<string, ModelPricing> = {
+  "claude-sonnet-5-5": {
+    inputPerMTok: 2,
+    outputPerMTok: 10,
+    cacheWrite5mPerMTok: 2.5,
+    cacheWrite1hPerMTok: 4,
+    cacheReadPerMTok: 0.2,
+  },
   "claude-opus-5-5": {
     inputPerMTok: 4,
     outputPerMTok: 20,

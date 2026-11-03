@@ -128,7 +128,7 @@ The order follows SPEC §14: the hardest guarantee comes first, and the UI waits
 
 ---
 
-## Step 3 — Operator, manifest and budget (first real API calls)
+## Step 3 — Operator, manifest and budget (first real API calls) ✅
 
 **Build**
 - Pin an exact version of `@anthropic-ai/sdk`.
@@ -158,6 +158,28 @@ The order follows SPEC §14: the hardest guarantee comes first, and the UI waits
 **Decision point (§18):** keep `claude-opus-5-5`, or switch models, or reduce trials or pool sizes. **The user decides.**
 
 **Done when** one real proposal is stored with its provenance and the cost per call is known.
+
+**Results (2026-11-03, 7 real calls, $0.13 spent in total)**
+
+| Run | Model | Scenario | Result | Cost |
+|---|---|---|---|---|
+| Smoke | Opus 5.5 | op-v2 / shortage | passed every check | $0.021 |
+| Pilot | Opus 5.5 | op-v1 / slow-machine | **failed C4 only** (planned 10 h vs true 13 h on SMT-2), as intended | $0.019 |
+| Pilot | Opus 5.5 | op-v2 / slow-machine | passed | $0.023 |
+| Pilot | Opus 5.5 | op-v2 / impossible-deadline | failed G5: escalated r1 but left a "reference only" slot in the schedule | $0.023 |
+| Pilot | Opus 5.5 | op-v2 / stale-inventory | failed G5 (same pattern) | $0.025 |
+| Retest | Sonnet 5.5 | op-v2 / stale-inventory | passed | $0.011 |
+| Retest | Sonnet 5.5 | op-v2 / impossible-deadline | failed C2: scheduled r1 late without escalating; summary was "PLACEHOLDER" | $0.007 |
+
+**Decisions**
+- **G5 kept strict.** The schedule is what gets executed, so a placeholder slot would really be written to the factory. The prompt now says so explicitly. This changed the prompt hash and therefore both manifests.
+- **Model: `claude-sonnet-5-5`** at effort `low` (the user's choice after the pilot). Sonnet calls cost about $0.007–0.011, so the ~520-proposal plan comes to roughly $5 of the $18 cap.
+- **No refusal fallback** to another model. The manifest names the model; a fallback's proposal would not belong to the manifest. Refusals are recorded as failed attempts.
+- **No prompt caching.** The system prompt is below the minimum cacheable size.
+
+**Open going into step 4:** on Sonnet 5.5 at low effort, the impossible-deadline answer was weak. The suite will measure this properly (10 trials per scenario). Don't tune the prompt or effort to pass it without the user's say.
+
+**How to run real calls:** `npx convex run pilot:run '{"stage":"smoke"|"pilot"|"retest"}'`. Every call reserves budget first, and `npx convex run budget:status` shows the ledger.
 
 ---
 
@@ -329,7 +351,7 @@ None of the mandatory tests are cut.
 
 | Decision | Needed by |
 |---|---|
-| Model choice after the cost pilot | End of step 3 |
-| Trial counts and pool sizes if the budget is tight | End of step 3 |
+| Model choice after the cost pilot | **Decided: `claude-sonnet-5-5`, effort low** |
+| Trial counts and pool sizes if the budget is tight | **Not needed: ~$0.01/call fits the plan** |
 | `pCatch` / `pPicky` | Before the step 6 freeze |
 | Public repo vs. access on request | **Decided: public** (github.com/juyal-devashish/EvosDemo) |

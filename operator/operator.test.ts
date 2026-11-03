@@ -146,3 +146,9 @@ describe("pricing", () => {
   test("cap is $18", () => expect(BUDGET_CAP_USD).toBe(18));
   test("unknown model has no pricing → refuses", () => expect(() => maxCostUsd("other", 1, 1)).toThrow(/no pricing/));
 });
+
+test("manifests use claude-sonnet-5-5 at low effort, and it has pricing", async () => {
+  const m = await opV2();
+  expect(m).toMatchObject({ model: "claude-sonnet-5-5", effort: "low" });
+  expect(actualCostUsd(m.model, USAGE)).toBeCloseTo(1200 * 2e-6 + 800 * 10e-6, 10);
+});

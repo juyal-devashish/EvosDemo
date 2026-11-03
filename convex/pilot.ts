@@ -9,6 +9,7 @@ import { internalAction, internalQuery } from "./_generated/server";
 // Run only with the user's approval:
 //   npx convex run pilot:run '{"stage":"smoke"}'   # 1 call
 //   npx convex run pilot:run '{"stage":"pilot"}'   # 4 calls
+//   npx convex run pilot:run '{"stage":"retest"}'  # 2 calls
 // Each call reserves budget first; results are stored as attempts.
 
 const STAGES = {
@@ -16,6 +17,11 @@ const STAGES = {
   pilot: [
     { scenarioId: "slow-machine", operatorVersion: "op-v1" },
     { scenarioId: "slow-machine", operatorVersion: "op-v2" },
+    { scenarioId: "impossible-deadline", operatorVersion: "op-v2" },
+    { scenarioId: "stale-inventory", operatorVersion: "op-v2" },
+  ],
+  /** After the prompt fix for G5 and the switch to claude-sonnet-5-5. */
+  retest: [
     { scenarioId: "impossible-deadline", operatorVersion: "op-v2" },
     { scenarioId: "stale-inventory", operatorVersion: "op-v2" },
   ],
@@ -40,7 +46,7 @@ type PilotResult = {
 };
 
 export const run = internalAction({
-  args: { stage: v.union(v.literal("smoke"), v.literal("pilot")) },
+  args: { stage: v.union(v.literal("smoke"), v.literal("pilot"), v.literal("retest")) },
   handler: async (ctx, { stage }): Promise<PilotResult> => {
     const hashes: { opV1: string; opV2: string } = await ctx.runAction(internal.operator.registerManifests, {});
     const results: PilotResult["results"] = [];

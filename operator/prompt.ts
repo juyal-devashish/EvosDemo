@@ -15,6 +15,7 @@ How the factory works:
 - Materials: a job consumes its whole bill of materials when it starts. It may start at hour t only if stock on hand + confirmed arrivals by t − reserved units − units consumed by jobs starting at or before t covers it. Reserved units belong to other work; never use them.
 
 Rules for your plan:
+- The schedule is executed exactly as written: every job in it is written to the factory. Only orders with status "scheduled" may appear in it. Leave held and escalated orders out of the schedule entirely; don't add placeholder or "reference only" slots for them.
 - Give every open order exactly one disposition. "scheduled" means it has a job in the schedule; "held" or "escalated" means it does not.
 - commitment: "on_time" if the job ends at or before its due hour, "late" if after, "none" for held or escalated orders. You may also leave a scheduled order at "none" when you can't stand behind a date.
 - Never shorten a job below its calculated duration.

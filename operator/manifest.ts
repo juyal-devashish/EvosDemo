@@ -31,11 +31,13 @@ export async function hashManifest(body: ManifestBody): Promise<Manifest> {
 }
 
 const common = {
-  model: "claude-opus-5-5",
+  // Chosen by the user after the step 3 cost pilot (plan.md). Sonnet 5.5
+  // thinks adaptively by default; effort is set explicitly because its
+  // default is high.
+  model: "claude-sonnet-5-5",
   effort: "low" as const,
-  // Opus 5.5 always thinks, and thinking counts toward max_tokens. The plan
-  // itself is small; this leaves room for low-effort thinking. Revisit after
-  // the cost pilot.
+  // Thinking counts toward max_tokens. Pilot plans used ~500–730 output
+  // tokens; this leaves headroom without inflating the budget reservation.
   maxTokens: 6000,
   guardrailVersion: GUARDRAIL_VERSION,
   policyVersion: POLICY_VERSION,
