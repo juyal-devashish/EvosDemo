@@ -94,7 +94,7 @@ export type FactorySnapshot = {
   dataAsOfShift: Record<DataSource, number>;
 };
 
-// Plan body (SPEC §6). Zod schema for model output arrives in step 3.
+// Plan body (SPEC §6). operator/planSchema.ts is the Zod schema for model output.
 
 export type DispositionStatus = "scheduled" | "held" | "escalated";
 export type Commitment = "on_time" | "late" | "none";
