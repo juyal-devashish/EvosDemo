@@ -75,7 +75,7 @@ async function main() {
   await scrollTo(page, ".day-bars", 140);
   await caption(page, "Days 1–3: the synthetic reviewer agrees with every plan. From day 4, SMT-2 runs 30% slow, and op-v1's plans go wrong.", 4500);
   await scrollTo(page, '[data-testid="window-1"]', 260);
-  await caption(page, "The monitor's 3-day window: 0/17 agreed, p ≈ 2.5×10⁻²⁶, below α = 0.00135. Signal.", 4000);
+  await caption(page, "The monitor's 3-day check: 0 of 17 plans agreed. A healthy AI would look this bad by luck less than 0.0001% of the time. Alarm.", 4500);
   await scrollBy(page, 260);
   await caption(page, "op-v1 is demoted automatically. At the next shift boundary, the backend refuses its queued action.", 4000);
 
@@ -85,7 +85,7 @@ async function main() {
   await caption(page, "The evidence viewer follows the stored records from the refusal back to its cause.", 3500);
   await caption(page, "Refused before execution: nothing was written to the factory (state version unchanged).", 4000);
   await scrollBy(page, 380);
-  await caption(page, "Step 2: the demotion it cites. Step 3: the monitor window and its binomial test.", 4000);
+  await caption(page, "Step 2: the demotion it cites. Step 3: the monitor check and why it rang the alarm.", 4000);
   await scrollBy(page, 480);
   await caption(page, "Step 4: the reviews behind the signal: C4 failures, durations more than 10% off.", 3800);
   await scrollBy(page, 900);
