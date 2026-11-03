@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Mono, Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import Link from "next/link";
+import { Suspense } from "react";
 import { AuthNav } from "./AuthNav";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 import "./globals.css";
@@ -28,7 +29,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <span className="mark" aria-hidden="true" />
               Earned Autonomy
             </Link>
-            <AuthNav />
+            {/* AuthNav reads the URL (usePathname); under cacheComponents that runtime read needs a Suspense boundary. */}
+            <Suspense fallback={<div className="nav-meta" />}>
+              <AuthNav />
+            </Suspense>
           </header>
           {children}
           <footer className="footer">

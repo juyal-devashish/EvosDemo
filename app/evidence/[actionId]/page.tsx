@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Suspense } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { CHECK, LEVEL, shortHash } from "../../labels";
@@ -21,11 +22,33 @@ type Evidence = NonNullable<FunctionReturnType<typeof api.evidence.forAction>>;
  * execution occurred."
  */
 export function outcomeHeadline(e: Pick<Evidence, "action" | "execution" | "plannedJobs">): string {
-  // TODO(human)
-  return "";
+  if (e.execution?.executed) return "This action executed; it was not refused.";
+  const jobs = `${e.plannedJobs.length}-job plan`;
+  const why: Record<string, string> = {
+    not_permitted: `the operator lost ${e.action.queuedUnder} autonomy before the boundary`,
+    shadow_never_executes: "the release is in shadow mode, which never executes",
+    no_valid_approval: "it had no approval for this exact revision",
+    revision_superseded: "a newer revision replaced it",
+    superseded: "a newer approved revision for the same shift replaced it",
+    stale_approval: "the factory changed since approval and a guardrail now fails",
+    guardrail_failed: "a guardrail fails on the current factory state",
+    manifest_mismatch: "its approval was for a different manifest",
+  };
+  const reason = e.action.refusalReason;
+  const because = reason ? (why[reason] ?? `of ${reason.replaceAll("_", " ")}`) : "of an unrecorded reason";
+  return `Refused before execution because ${because}. Its ${jobs} was not written.`;
 }
 
 export default function EvidencePage() {
+  // useParams is runtime data; under cacheComponents it needs a Suspense boundary.
+  return (
+    <Suspense fallback={<p className="intro muted">Loading evidence…</p>}>
+      <EvidenceView />
+    </Suspense>
+  );
+}
+
+function EvidenceView() {
   const { actionId } = useParams<{ actionId: string }>();
   const e = useQuery(api.evidence.forAction, { actionId: actionId as Id<"actions"> });
 

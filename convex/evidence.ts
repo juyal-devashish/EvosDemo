@@ -121,11 +121,21 @@ export const forAction = query({
     const windowReviews = window ? (await Promise.all(window.reviewIds.map((id) => ctx.db.get(id)))).filter((r): r is Doc<"reviews"> => r !== null) : [];
     const shown = pickEvidenceReviews(windowReviews, MAX_REVIEWS_SHOWN);
 
-    const [refusedManifest, otherManifests] = await Promise.all([
-      manifestSummary(ctx, action.manifestHash),
-      ctx.db.query("manifests").collect(),
-    ]);
-    const fix = otherManifests.find((m) => m.operatorVersion === "op-v2" && m.suiteVersion === "rs-1.0" && m.model === refusedManifest?.model);
+    // The fix is the op-v2 manifest that passed the release suite (several
+    // op-v2 manifests exist from earlier prompt and model changes).
+    const refusedManifest = await manifestSummary(ctx, action.manifestHash);
+    const passed = (await ctx.db.query("suiteVerdicts").order("desc").collect()).filter((v) => v.verdict === "passed");
+    let fix = null;
+    for (const v of passed) {
+      const m = await ctx.db
+        .query("manifests")
+        .withIndex("by_hash", (q) => q.eq("manifestHash", v.manifestHash))
+        .unique();
+      if (m && m.operatorVersion === "op-v2") {
+        fix = m;
+        break;
+      }
+    }
 
     return {
       label: "Fault-injection replay. Synthetic factory and synthetic reviewer.",

@@ -249,7 +249,7 @@ Medium costs about the same as low here (~$0.01/call). Impossible-deadline has n
 
 ---
 
-## Step 5 — UI and Playwright
+## Step 5 — UI and Playwright ✅
 
 **Build**
 - Clerk with the `planner` and `qa` roles. Server-side role checks stay in Convex.
@@ -267,6 +267,20 @@ Medium costs about the same as low here (~$0.01/call). Impossible-deadline has n
 - The public page shows no controls that change data.
 
 **Done when** all three Playwright tests pass.
+
+**As built**
+- **Public, no login** (`/`): suite verdicts, per-scenario counts, failure evidence, the manifest diff, the replay timeline, and the evidence viewer (`/evidence/<actionId>`, replay sessions only).
+- **Signed in:**
+  - `/review` (planner, qa): the operator card, with G1–G8 ✓/✕, dispositions, escalations, provenance and Approve.
+  - `/qa` (qa): create demo sessions, authorize supervised or limited, request a proposal, advance the clock, and start or cancel suites. Budget-spending buttons need a confirming second click.
+- **Auth:** Clerk Core 3 (`Show`, `proxy.ts`). Convex reads `role` from the "convex" JWT template. Access control is only in Convex.
+- **Sentry:** browser and server errors via `@sentry/nextjs`. Convex events (`suite.incomplete`, `permission.demoted`, `action.refused`) are forwarded by a scheduled action that posts a Sentry envelope, so an event is sent only if its mutation committed.
+- **Playwright:**
+  - Public page: T2 (screen = stored values) and no mutating controls.
+  - Signed out: review and QA show nothing.
+  - Signed in: qa and planner role flows, with ticket sign-in from `@clerk/testing`.
+  - Headline: the refused replay action's evidence, checked against stored values.
+  - State-changing tasks (authorizing op-v2 in the replay) live in `tests/e2e/tasks` and run only with `E2E_TASKS=1`.
 
 ---
 
@@ -325,7 +339,7 @@ These are claims about the monitor's statistical behavior on resampled pools wit
 
 ---
 
-## Step 7 — Shift boundary, fault-injection replay and recovery
+## Step 7 — Shift boundary, fault-injection replay and recovery ✅
 
 **Build**
 - `inngest/shiftBoundary`, with steps that must run in order (§9.6):
@@ -346,6 +360,30 @@ These are claims about the monitor's statistical behavior on resampled pools wit
 **Real calls (~120 for the recorded session and ~80 for recovery evidence): ask before running.**
 
 **Done when** the full story is recorded and visible in the evidence viewer: demotion → refusal → recovery.
+
+**As built**
+- **`shiftBoundary` is a Convex action, not Inngest.** This is a deviation from SPEC §2, consistent with step 4's choice. Its three steps (close period → commit demotion → release queue) are separate mutations, and each marks itself done on a `boundaryRuns` row, so a retry resumes. Release calls the idempotent `executeAction`. A test covers the case where the mutation commits, the step dies, and the retry still executes exactly once.
+- **Replay time is compressed:** 6 decision slots per simulated day. Each slot loads its own deterministic routine snapshot (`sim/routine.ts`), makes one real op-v1 call, and runs the boundary. SMT-2 runs 30% slow from day 4.
+- **Reviews:**
+  - Limited mode: 100% post-execution review by the labeled synthetic reviewer, using the frozen rates.
+  - Recovery: supervised review before execution; only agreed plans are approved and executed.
+- **Regression scenario for recovery:** slow-machine, which is already in rs-1.0. op-v2's passed run includes it, so no new suite version (and no new manifest) was needed.
+
+**Recorded replay (2026-11-03, 36 real op-v1 calls, about $0.76)**
+- Days 1–3: 17/17 agreed, so window 0 was OK.
+- Days 4–6: 0/17 agreed. Every plan failed C4, with durations more than 10% off.
+- At the boundary into day 7, window 1 signalled (P(X ≤ 0 | n = 17, p₀ = 0.9688) ≈ 2.5×10⁻²⁶ ≤ α), and op-v1 was **demoted**. The queued action was then released and **refused: not_permitted**, with the demotion as evidence.
+- Window n is 17, not 18, because each window's last decision is still queued when its boundary runs, so it has no review yet.
+
+**Recovery (80 real op-v2 calls, about $2.13; $7.15 spent in total)**
+- The qa test user authorized op-v2 supervised in the replay session through the QA console (`tests/e2e/tasks`).
+- 80 supervised routine reschedules on drifted SMT-2 snapshots: **78/80 agreed** with the synthetic reviewer. The 2 edits had no check failures; they were pPicky edits. Every attempt succeeded.
+- One-sided 95% Clopper–Pearson lower bound **0.923 ≥ floor 0.90**, with at least 80 fresh reviews, and rs-1.0 (including slow-machine) passed. The qa user then authorized **op-v2 → limited**.
+- Permission history in the session:
+  - op-v1: shadow → limited (fault-injection override)
+  - op-v1: limited → demoted (monitor signal)
+  - op-v2: shadow → supervised (qa)
+  - op-v2: supervised → limited (qa)
 
 ---
 
