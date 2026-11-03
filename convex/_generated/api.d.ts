@@ -24,6 +24,7 @@ import type * as pilot from "../pilot.js";
 import type * as pools from "../pools.js";
 import type * as proposals from "../proposals.js";
 import type * as queue from "../queue.js";
+import type * as replay from "../replay.js";
 import type * as results from "../results.js";
 import type * as review from "../review.js";
 import type * as sessions from "../sessions.js";
@@ -53,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   pools: typeof pools;
   proposals: typeof proposals;
   queue: typeof queue;
+  replay: typeof replay;
   results: typeof results;
   review: typeof review;
   sessions: typeof sessions;
