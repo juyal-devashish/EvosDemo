@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-Step 0 (scaffold) is done: Next.js 16 App Router, Convex with an anonymous local deployment, Vitest + `convex-test`, Playwright (empty suite). The Convex schema is a placeholder until step 1. Shared domain types live in [sim/domain.ts](sim/domain.ts); extend them, don't redefine them. The commands in AGENTS.md are the real scripts.
+Steps 0–1 are done: Next.js 16 App Router, Convex (anonymous local deployment), Vitest + `convex-test`, Playwright (empty suite), the full Convex schema, the permission levels, approvals, the action queue and the atomic `executeAction` in [convex/execute.ts](convex/execute.ts). Step-specific deviations and deferrals are recorded under each step in plan.md. Backend test fixtures live in [tests/backend/fixtures.ts](tests/backend/fixtures.ts). Shared domain types live in [sim/domain.ts](sim/domain.ts); extend them, don't redefine them. The commands in AGENTS.md are the real scripts.
 
 Next.js 16 differs from older versions (for example, the global `LayoutProps` route types come from `next typegen`). Check `node_modules/next/dist/docs/` before writing Next code.
 

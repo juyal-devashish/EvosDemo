@@ -39,7 +39,7 @@ The order follows SPEC §14: the hardest guarantee comes first, and the UI waits
 
 ---
 
-## Step 1 — Convex core and atomic `executeAction` (no AI)
+## Step 1 — Convex core and atomic `executeAction` (no AI) ✅
 
 **Build**
 - `convex/schema.ts`. Every state table carries `sessionId`. Tables: `sessions`, `manifests`, factory state with `stateVersion`, `proposals` and immutable `proposalRevisions`, `approvals`, `actions`, `executions`, `permissions`, `audit` (§9).
@@ -74,6 +74,15 @@ The order follows SPEC §14: the hardest guarantee comes first, and the UI waits
 
 **Done when** every test above passes.
 
+**As built (notes for later steps)**
+- `executeAction` is an `internalMutation`: only server code (later `shiftBoundary`) can call it. It checks for an existing execution record *before* reading the permission, so a retry after a demotion returns the committed result rather than a refusal.
+- Approvals are recorded at any level, and `queue.approve` queues the action for the next shift. Shadow still refuses at execution.
+- Roles come from a `role` claim in the JWT. Step 5 must add a Clerk JWT template that maps user public metadata to `role`.
+- `checks/guardrails.ts` implements G1, G5, G6 and the horizon part of G4. G2, G3, G7, G8 and G4's availability intervals are reported as `notYetImplemented` and need step 2's factory data.
+- `promoteToLimited` (supervised → limited, demoted → limited) is not built: it needs the recovery evidence from steps 6–7. For now, limited autonomy exists only through the fault-injection override.
+- Suite verdicts are written by a placeholder `recordSuiteVerdict`; step 4 replaces it with real suite runs.
+- Manifest hashes are supplied by callers for now; step 3 computes them.
+
 ---
 
 ## Step 2 — Scheduling model, oracle and checks (no AI)
@@ -95,7 +104,7 @@ The order follows SPEC §14: the hardest guarantee comes first, and the UI waits
   - T1, T3, T4: truth checks.
   - Each check has one passing fixture and one failing fixture.
 - The 8 `rs-1.0` scenario fixtures (§5), each with its `expectedOutcome`.
-- Wire G1–G8 into `executeAction` in place of the stub.
+- Complete G1–G8 in `checks/guardrails.ts` (empty `notYetImplemented`) and pass factory data through `convex/lib/factory.ts#checkPlan`, which proposals, approvals and `executeAction` already call.
 
 **Tests**
 - Two jobs can't consume the same reserved stock (G2).
