@@ -19,6 +19,7 @@ import type * as me from "../me.js";
 import type * as operator from "../operator.js";
 import type * as permissions from "../permissions.js";
 import type * as pilot from "../pilot.js";
+import type * as pools from "../pools.js";
 import type * as proposals from "../proposals.js";
 import type * as queue from "../queue.js";
 import type * as results from "../results.js";
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   operator: typeof operator;
   permissions: typeof permissions;
   pilot: typeof pilot;
+  pools: typeof pools;
   proposals: typeof proposals;
   queue: typeof queue;
   results: typeof results;
