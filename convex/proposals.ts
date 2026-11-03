@@ -48,7 +48,7 @@ async function insertRevision(
   return revisionId;
 }
 
-/** Operator output lands here (server-side only; step 3 wires the model call). */
+/** Fixture entry point for a proposal (tests). Real operator output arrives via operator.finishAttempt. */
 export const create = internalMutation({
   args: {
     sessionId: v.id("sessions"),
