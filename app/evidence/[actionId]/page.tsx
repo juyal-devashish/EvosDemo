@@ -7,7 +7,8 @@ import { useParams } from "next/navigation";
 import { Suspense } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { CHECK, LEVEL, shortHash } from "../../labels";
+import { formatChance, formatCount, formatPercent } from "../../format";
+import { CHECK, LEVEL, TRIGGER, shortHash } from "../../labels";
 
 type Evidence = NonNullable<FunctionReturnType<typeof api.evidence.forAction>>;
 
@@ -103,32 +104,37 @@ function EvidenceView() {
               <dd data-testid="permission-change">
                 {LEVEL[e.permissionChange.from]} → {LEVEL[e.permissionChange.to]}
               </dd>
-              <dt>Trigger</dt>
-              <dd>{e.permissionChange.trigger.replaceAll("_", " ")}</dd>
-              <dt>Note</dt>
-              <dd>{e.permissionChange.note ?? "—"}</dd>
+              <dt>Why</dt>
+              <dd>{TRIGGER[e.permissionChange.trigger] ?? e.permissionChange.trigger}</dd>
+              <dt>Detail</dt>
+              <dd>
+                {e.permissionChange.trigger === "monitor_signal"
+                  ? "The monitor's alarm rang (step 3), so the system demoted it automatically. No person did this."
+                  : (e.permissionChange.note ?? "—")}
+              </dd>
             </dl>
           ) : (
             <p className="muted">No permission change recorded.</p>
           )}
         </Step>
 
-        <Step n={3} title="Monitor window that signalled">
+        <Step n={3} title="Monitor check that rang the alarm">
           {e.window ? (
             <dl className="kv">
-              <dt>Window</dt>
+              <dt>Days checked</dt>
               <dd>
-                days {e.window.startDay}–{e.window.endDay}, evaluated day {e.window.evaluatedOnDay}
+                days {e.window.startDay}–{e.window.endDay} (checked on day {e.window.evaluatedOnDay})
               </dd>
-              <dt>Review agreement</dt>
+              <dt>Plans agreed</dt>
               <dd data-testid="window-agreement">
-                {e.window.x}/{e.window.n} agreed · {e.window.pending} pending (never counted as agreement)
+                {formatCount(e.window.x, e.window.n)} agreed · {e.window.pending} waiting for review (never counted as agreed)
               </dd>
-              <dt>Test</dt>
-              <dd>
-                P(X ≤ {e.window.x} | n = {e.window.n}, p₀ = {e.window.p0}) = {e.window.pValue?.toExponential(2) ?? "—"} ≤ α ={" "}
-                {e.window.alpha}
-              </dd>
+              <dt>Normal health level</dt>
+              <dd>a healthy AI normally has about {formatPercent(e.window.p0)} of its plans agreed</dd>
+              <dt>Chance a healthy AI looks this bad</dt>
+              <dd data-testid="window-chance">{e.window.pValue === null ? "—" : formatChance(e.window.pValue)}</dd>
+              <dt>Alarm level</dt>
+              <dd>the alarm rings when that chance falls below {formatPercent(e.window.alpha)}</dd>
             </dl>
           ) : (
             <p className="muted">No monitor window recorded.</p>
