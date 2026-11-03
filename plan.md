@@ -1,4 +1,4 @@
-# Implementation Plan — Earned Autonomy
+# Implementation Plan — EvosDemo
 
 How we build [SPEC.md](SPEC.md), step by step. The spec is the source of truth. This file covers the order of work, what "done" means at each step, and where we stop to check in. If this plan and the spec disagree, the spec wins, and we fix this file.
 
