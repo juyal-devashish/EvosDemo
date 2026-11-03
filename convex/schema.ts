@@ -1,10 +1,181 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import {
+  actionState,
+  executionResult,
+  guardrailFailure,
+  manifestFields,
+  permissionLevel,
+  plan,
+  refusalReason,
+  role,
+  scheduleDiff,
+  scope,
+} from "./lib/validators";
 
-// Step 0 placeholder. The full schema (SPEC §9) lands in step 1.
+// SPEC §9. Every state table carries `sessionId` (§9.1). Manifests are
+// release definitions shared across sessions, so they are the one exception.
+// Records used as evidence (revisions, approvals, permission changes,
+// executions, audit) are append-only: no function updates them.
+
+const actor = v.object({
+  kind: v.union(v.literal("user"), v.literal("system")),
+  /** Clerk subject for users; a job name (e.g. "shiftBoundary") for system. */
+  id: v.string(),
+  role: v.optional(role),
+});
+
 export default defineSchema({
   sessions: defineTable({
     label: v.string(),
+    kind: v.union(
+      v.literal("suite"),
+      v.literal("replay"),
+      v.literal("demo"),
+      v.literal("test"),
+    ),
+    /** Only these sessions allow the fault-injection override (§9.4). */
     faultInjection: v.boolean(),
+    /** Injected ERP write failure on execution (the failed-write scenario, §5). */
+    injectWriteFailure: v.boolean(),
+    /** Simulated clock: index of the current shift in the horizon. */
+    currentShift: v.number(),
+    /** Incremented by every committed business-state change (§9.3). */
+    stateVersion: v.number(),
   }),
+
+  manifests: defineTable(manifestFields).index("by_hash", ["manifestHash"]),
+
+  /** Factory schedule. Frozen jobs are already started and never moved (§3). */
+  jobs: defineTable({
+    sessionId: v.id("sessions"),
+    orderId: v.string(),
+    lineId: v.string(),
+    startHour: v.number(),
+    endHour: v.number(),
+    frozen: v.boolean(),
+  })
+    .index("by_session", ["sessionId"])
+    .index("by_session_order", ["sessionId", "orderId"]),
+
+  /** One decision = one proposal for one trigger (§9.2). */
+  proposals: defineTable({
+    sessionId: v.id("sessions"),
+    manifestHash: v.string(),
+    scope,
+    trigger: v.string(),
+    shift: v.number(),
+    latestRevisionId: v.optional(v.id("proposalRevisions")),
+    revisionCount: v.number(),
+  }).index("by_session", ["sessionId"]),
+
+  /** Immutable. An edit creates a new revision (§9.3). */
+  proposalRevisions: defineTable({
+    sessionId: v.id("sessions"),
+    proposalId: v.id("proposals"),
+    revisionNumber: v.number(),
+    parentRevisionId: v.optional(v.id("proposalRevisions")),
+    author: actor,
+    /** Factory stateVersion the revision was built against. */
+    baseStateVersion: v.number(),
+    /** Guardrails at proposal time, against `baseStateVersion` (§7). */
+    proposalTimeCheck: v.object({
+      ok: v.boolean(),
+      failures: v.array(guardrailFailure),
+      notYetImplemented: v.array(v.string()),
+    }),
+    ...plan,
+  }).index("by_proposal", ["proposalId", "revisionNumber"]),
+
+  /** Immutable. Binds to one revision and one manifest (§9.3). */
+  approvals: defineTable({
+    sessionId: v.id("sessions"),
+    proposalRevisionId: v.id("proposalRevisions"),
+    baseStateVersion: v.number(),
+    actor,
+    manifestHash: v.string(),
+    decidedAt: v.number(),
+  }).index("by_revision", ["proposalRevisionId"]),
+
+  /** A request to apply one revision at a shift boundary. */
+  actions: defineTable({
+    sessionId: v.id("sessions"),
+    proposalRevisionId: v.id("proposalRevisions"),
+    manifestHash: v.string(),
+    scope,
+    dueShift: v.number(),
+    /** The permission the action was queued under. */
+    queuedUnder: v.union(v.literal("supervised"), v.literal("limited")),
+    approvalId: v.optional(v.id("approvals")),
+    state: actionState,
+    refusalReason: v.optional(refusalReason),
+    queuedAt: v.number(),
+  })
+    .index("by_session_state", ["sessionId", "state"])
+    .index("by_session_scope_shift", ["sessionId", "scope", "dueShift", "state"]),
+
+  /** One per action, written on every outcome. Used for dedup (§9.5 step 3). */
+  executions: defineTable({
+    sessionId: v.id("sessions"),
+    actionId: v.id("actions"),
+    result: executionResult,
+    refusalReason: v.optional(refusalReason),
+    guardrailFailures: v.array(guardrailFailure),
+    /** Records the refusal or write relies on (permission change, approval, revision). */
+    evidenceIds: v.array(v.string()),
+    stateVersionBefore: v.number(),
+    stateVersionAfter: v.number(),
+    diff: v.optional(scheduleDiff),
+    executedAt: v.number(),
+  }).index("by_action", ["actionId"]),
+
+  /** Current level per session × manifest × scope. No row means shadow. */
+  permissions: defineTable({
+    sessionId: v.id("sessions"),
+    manifestHash: v.string(),
+    scope,
+    level: permissionLevel,
+    viaFaultInjection: v.boolean(),
+    lastChangeId: v.id("permissionChanges"),
+  }).index("by_key", ["sessionId", "manifestHash", "scope"]),
+
+  /** Immutable history of every level change, with its evidence. */
+  permissionChanges: defineTable({
+    sessionId: v.id("sessions"),
+    manifestHash: v.string(),
+    scope,
+    from: permissionLevel,
+    to: permissionLevel,
+    trigger: v.union(
+      v.literal("qa_authorization"),
+      v.literal("monitor_signal"),
+      v.literal("fault_injection_override"),
+    ),
+    actor,
+    evidenceIds: v.array(v.string()),
+    note: v.optional(v.string()),
+    changedAt: v.number(),
+  }).index("by_key", ["sessionId", "manifestHash", "scope"]),
+
+  /**
+   * Release-suite verdicts per manifest. Step 4 writes these from real suite
+   * runs; `sessionId` is the suite run's own session.
+   */
+  suiteVerdicts: defineTable({
+    sessionId: v.id("sessions"),
+    manifestHash: v.string(),
+    suiteVersion: v.string(),
+    verdict: v.union(v.literal("passed"), v.literal("failed"), v.literal("incomplete")),
+    scenarioIds: v.array(v.string()),
+    recordedAt: v.number(),
+  }).index("by_manifest", ["manifestHash", "suiteVersion"]),
+
+  audit: defineTable({
+    sessionId: v.id("sessions"),
+    kind: v.string(),
+    actor,
+    refs: v.array(v.string()),
+    detail: v.optional(v.string()),
+    at: v.number(),
+  }).index("by_session", ["sessionId"]),
 });
