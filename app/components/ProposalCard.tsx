@@ -4,6 +4,7 @@ import { useMutation } from "convex/react";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
+import { describeError } from "../errors";
 import { CHECK, shortHash } from "../labels";
 
 type SessionView = FunctionReturnType<typeof api.review.session>;
@@ -47,7 +48,7 @@ export function ProposalCard({
     try {
       await approve({ sessionId, revisionId: p.revision.revisionId });
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(describeError(e, { operatorVersion: p.operatorVersion }));
     } finally {
       setBusy(false);
     }
