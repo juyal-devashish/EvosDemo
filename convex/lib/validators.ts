@@ -105,3 +105,39 @@ export const scheduleDiff = v.object({
   added: v.array(scheduleEntry),
   removed: v.array(scheduleEntry),
 });
+
+// Factory snapshot (mirrors sim/domain.ts#FactorySnapshot).
+
+const lineType = v.union(v.literal("SMT"), v.literal("THT"));
+const interval = v.object({ start: v.number(), end: v.number() });
+const cycleTime = v.object({ lineId: v.string(), partFamily: v.string(), hoursPerUnit: v.number() });
+
+export const factoryFields = {
+  lines: v.array(v.object({ lineId: v.string(), lineType, availability: v.array(interval) })),
+  orders: v.array(
+    v.object({
+      orderId: v.string(),
+      lineType,
+      partFamily: v.string(),
+      qty: v.number(),
+      dueHour: v.number(),
+      rush: v.boolean(),
+      priorityRank: v.number(),
+      bom: v.array(v.object({ partNumber: v.string(), qtyPer: v.number() })),
+    }),
+  ),
+  standardCycleTimes: v.array(cycleTime),
+  mesObservations: v.array(
+    v.object({ ...cycleTime.fields, day: v.number(), shift: v.union(v.literal("A"), v.literal("B")) }),
+  ),
+  stock: v.array(v.object({ partNumber: v.string(), onHand: v.number() })),
+  arrivals: v.array(
+    v.object({ partNumber: v.string(), qty: v.number(), arrivalHour: v.number(), confirmed: v.boolean() }),
+  ),
+  reservations: v.array(
+    v.object({ reservationId: v.string(), holder: v.string(), partNumber: v.string(), qty: v.number() }),
+  ),
+  dataAsOfShift: v.object({ erp_routing: v.number(), erp_stock: v.number(), mes_cycle_times: v.number() }),
+};
+
+export const seedJob = v.object({ ...scheduleEntry.fields, partFamily: v.string(), frozen: v.boolean() });

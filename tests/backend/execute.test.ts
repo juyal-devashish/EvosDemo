@@ -168,7 +168,7 @@ describe("executeAction", () => {
 
     // Before the boundary, other work starts on THT-1 and the state moves on.
     await t.run(async (ctx) => {
-      await ctx.db.insert("jobs", { sessionId, ...job("f2", "THT-1", 0, 6), frozen: true });
+      await ctx.db.insert("jobs", { sessionId, ...job("f2", "THT-1", 0, 6), partFamily: "C", frozen: true });
       await ctx.db.patch(sessionId, { stateVersion: 1 });
     });
     const before = await businessState(t, sessionId);

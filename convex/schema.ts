@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import {
   actionState,
+  factoryFields,
   executionResult,
   guardrailFailure,
   manifestFields,
@@ -46,6 +47,13 @@ export default defineSchema({
 
   manifests: defineTable(manifestFields).index("by_hash", ["manifestHash"]),
 
+  /**
+   * Factory data per session (§3): lines, open orders, ERP standard, MES
+   * observations, stock, arrivals, reservations and source refresh shifts.
+   * True cycle times are simulation truth and never stored here.
+   */
+  factory: defineTable({ sessionId: v.id("sessions"), ...factoryFields }).index("by_session", ["sessionId"]),
+
   /** Factory schedule. Frozen jobs are already started and never moved (§3). */
   jobs: defineTable({
     sessionId: v.id("sessions"),
@@ -53,6 +61,7 @@ export default defineSchema({
     lineId: v.string(),
     startHour: v.number(),
     endHour: v.number(),
+    partFamily: v.string(),
     frozen: v.boolean(),
   })
     .index("by_session", ["sessionId"])
@@ -82,7 +91,7 @@ export default defineSchema({
     proposalTimeCheck: v.object({
       ok: v.boolean(),
       failures: v.array(guardrailFailure),
-      notYetImplemented: v.array(v.string()),
+      guardrailVersion: v.string(),
     }),
     ...plan,
   }).index("by_proposal", ["proposalId", "revisionNumber"]),

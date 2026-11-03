@@ -1,4 +1,5 @@
 import { ConvexError, v } from "convex/values";
+import { GUARDRAIL_VERSION } from "../checks/guardrails";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, mutation, type MutationCtx } from "./_generated/server";
 import { requireRole, systemActor, type Actor } from "./auth";
@@ -31,11 +32,7 @@ async function insertRevision(
     parentRevisionId: args.parentRevisionId,
     author: args.author,
     baseStateVersion: session.stateVersion,
-    proposalTimeCheck: {
-      ok: check.ok,
-      failures: check.failures,
-      notYetImplemented: check.notYetImplemented,
-    },
+    proposalTimeCheck: { ok: check.ok, failures: check.failures, guardrailVersion: GUARDRAIL_VERSION },
     ...args.plan,
   });
   await ctx.db.patch(args.proposalId, {

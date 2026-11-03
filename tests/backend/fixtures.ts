@@ -16,7 +16,7 @@ const baseManifest = {
   model: "claude-opus-5-5",
   effort: "low",
   maxTokens: 4000,
-  guardrailVersion: "g-0.1-partial",
+  guardrailVersion: "g-1.0",
   policyVersion: "p-0.1",
   suiteVersion: "rs-1.0",
   scope: "scheduling" as const,
@@ -43,12 +43,41 @@ export const job = (orderId: string, lineId: string, startHour: number, endHour:
   endHour,
 });
 
-/** Frozen f1 on SMT-1; movable o1 (SMT-1) and o2 (SMT-2). */
+/** Frozen f1 (family A) on SMT-1; movable o1 (SMT-1) and o2 (SMT-2). */
 export const INITIAL_JOBS = [
-  { ...job("f1", "SMT-1", 0, 4), frozen: true },
-  { ...job("o1", "SMT-1", 4, 8), frozen: false },
-  { ...job("o2", "SMT-2", 0, 6), frozen: false },
+  { ...job("f1", "SMT-1", 0, 4), partFamily: "A", frozen: true },
+  { ...job("o1", "SMT-1", 4, 8), partFamily: "A", frozen: false },
+  { ...job("o2", "SMT-2", 0, 6), partFamily: "B", frozen: false },
 ];
+
+const full = [{ start: 0, end: 48 }];
+const std = (lineId: string, partFamily: string) => ({ lineId, partFamily, hoursPerUnit: 0.1 });
+const openOrder = (orderId: string, lineType: "SMT" | "THT", partFamily: string, qty: number) => ({
+  orderId,
+  lineType,
+  partFamily,
+  qty,
+  dueHour: 48,
+  rush: false,
+  priorityRank: 1,
+  bom: [],
+});
+
+/** Three lines at 0.1 h/unit; o1 = 4 h, o2 = 6 h, o3 = 5 h. All data fresh. */
+export const FACTORY = {
+  lines: [
+    { lineId: "SMT-1", lineType: "SMT" as const, availability: full },
+    { lineId: "SMT-2", lineType: "SMT" as const, availability: full },
+    { lineId: "THT-1", lineType: "THT" as const, availability: full },
+  ],
+  orders: [openOrder("o1", "SMT", "A", 40), openOrder("o2", "SMT", "B", 60), openOrder("o3", "THT", "C", 50)],
+  standardCycleTimes: [std("SMT-1", "A"), std("SMT-1", "B"), std("SMT-2", "A"), std("SMT-2", "B"), std("THT-1", "C")],
+  mesObservations: [],
+  stock: [],
+  arrivals: [],
+  reservations: [],
+  dataAsOfShift: { erp_routing: 0, erp_stock: 0, mes_cycle_times: 0 },
+};
 
 /** A valid whole-schedule revision: move o2 to later on SMT-2, add o3 on THT-1. */
 export const REVISED_SCHEDULE = [job("o1", "SMT-1", 4, 8), job("o2", "SMT-2", 8, 14), job("o3", "THT-1", 0, 5)];
@@ -76,6 +105,7 @@ export async function seedSession(
     kind: "test",
     faultInjection: opts.faultInjection ?? false,
     injectWriteFailure: opts.injectWriteFailure,
+    factory: FACTORY,
     jobs: INITIAL_JOBS,
   });
   await t.mutation(internal.permissions.registerManifest, OP_V1);

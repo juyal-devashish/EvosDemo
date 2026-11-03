@@ -1,61 +1,135 @@
 import { describe, expect, test } from "vitest";
-import type { ScheduledJob } from "../sim/domain";
-import { g1NoOverlap, g4InsideHorizon, g5SchemaValid, g6InScope, runGuardrails } from "./guardrails";
+import type { FactorySnapshot, Plan } from "../sim/domain";
+import { runGuardrails, type GuardrailId } from "./guardrails";
+import { job, order, planOf, snapshot } from "./testkit";
 
-const job = (orderId: string, lineId: string, startHour: number, endHour: number): ScheduledJob => ({
-  orderId,
-  lineId,
-  startHour,
-  endHour,
+// Each guardrail has a passing and a failing fixture (AGENTS.md).
+
+const ids = (s: FactorySnapshot, plan: Plan, dataView = { includeMesCycleTimes: false }, proposalScope = "scheduling") =>
+  runGuardrails({ grantedScope: "scheduling", proposalScope, snapshot: s, plan, dataView }).failures.map(
+    (f) => `${f.id}:${f.orderId ?? ""}`,
+  );
+
+const GOOD = planOf([job("o1", "SMT-1", 4, 8), job("o2", "SMT-2", 0, 4), job("o3", "THT-1", 0, 4)]);
+
+test("a valid plan passes all of G1–G8", () => {
+  expect(ids(snapshot(), GOOD)).toEqual([]);
 });
 
-describe("G1 no overlap", () => {
-  test("passes: back-to-back jobs and frozen work on the same line", () => {
-    expect(g1NoOverlap([job("o1", "SMT-1", 4, 8), job("o2", "SMT-1", 8, 10)], [job("f1", "SMT-1", 0, 4)])).toEqual([]);
-  });
-  test("fails: overlap with another movable job", () => {
-    const f = g1NoOverlap([job("o1", "SMT-1", 0, 5), job("o2", "SMT-1", 4, 8)], []);
-    expect(f).toHaveLength(1);
-    expect(f[0]).toMatchObject({ id: "G1", orderId: "o1" });
-  });
-  test("fails: overlap with frozen work", () => {
-    expect(g1NoOverlap([job("o1", "SMT-1", 3, 6)], [job("f1", "SMT-1", 0, 4)])).toMatchObject([
-      { id: "G1", orderId: "o1" },
-    ]);
-  });
-  test("fails: rescheduling a frozen job", () => {
-    expect(g1NoOverlap([job("f1", "SMT-2", 10, 14)], [job("f1", "SMT-1", 0, 4)])).toMatchObject([
-      { id: "G1", orderId: "f1" },
-    ]);
+const cases: { id: GuardrailId; name: string; s?: FactorySnapshot; plan: Plan; dataView?: { includeMesCycleTimes: boolean; maxDataAgeShifts?: number }; scope?: string; expected: string[] }[] = [
+  { id: "G1", name: "overlap with frozen work", plan: planOf([job("o1", "SMT-1", 3, 7)]), expected: ["G1:o1"] },
+  { id: "G1", name: "overlap between movable jobs", plan: planOf([job("o1", "SMT-2", 0, 4), job("o2", "SMT-2", 3.5, 8)]), expected: ["G1:o1"] },
+  { id: "G1", name: "moving frozen work", plan: planOf([job("f1", "SMT-2", 10, 14)]), expected: ["G1:f1"] },
+  {
+    id: "G2",
+    name: "consuming reserved stock",
+    s: snapshot({
+      orders: [order({ orderId: "o1", bom: [{ partNumber: "CONN", qtyPer: 1 }] })],
+      stock: [{ partNumber: "CONN", onHand: 50 }],
+      reservations: [{ reservationId: "r", holder: "x", partNumber: "CONN", qty: 20 }],
+    }),
+    plan: planOf([job("o1", "SMT-1", 4, 8)]),
+    expected: ["G2:o1"],
+  },
+  {
+    id: "G2",
+    name: "starting before a confirmed arrival",
+    s: snapshot({
+      orders: [order({ orderId: "o1", bom: [{ partNumber: "IC", qtyPer: 1 }] })],
+      arrivals: [{ partNumber: "IC", qty: 40, arrivalHour: 16, confirmed: true }],
+    }),
+    plan: planOf([job("o1", "SMT-1", 8, 12)]),
+    expected: ["G2:o1"],
+  },
+  { id: "G3", name: "SMT order on a THT line", plan: planOf([job("o1", "THT-1", 0, 4)]), expected: ["G3:o1"] },
+  {
+    id: "G4",
+    name: "job inside line downtime",
+    s: snapshot({
+      lines: [
+        { lineId: "SMT-1", lineType: "SMT", availability: [{ start: 0, end: 48 }] },
+        { lineId: "SMT-2", lineType: "SMT", availability: [{ start: 0, end: 2 }, { start: 16, end: 48 }] },
+        { lineId: "THT-1", lineType: "THT", availability: [{ start: 0, end: 48 }] },
+      ],
+    }),
+    plan: planOf([job("o2", "SMT-2", 0, 4)]),
+    expected: ["G4:o2"],
+  },
+  { id: "G4", name: "past the horizon", plan: planOf([job("o2", "SMT-2", 46, 50)]), expected: ["G4:o2"] },
+  { id: "G5", name: "zero-length job", plan: planOf([job("o2", "SMT-2", 4, 4)]), expected: ["G5:o2", "G7:o2"] },
+  {
+    id: "G5",
+    name: "`scheduled` disposition without a job",
+    plan: { ...planOf([]), dispositions: [{ orderId: "o1", status: "scheduled", commitment: "on_time" }] },
+    expected: ["G5:o1"],
+  },
+  { id: "G6", name: "another scope", plan: planOf([job("o2", "SMT-2", 0, 4)]), scope: "purchasing", expected: ["G6:"] },
+  { id: "G6", name: "an order that isn't open", plan: planOf([job("zz", "SMT-2", 0, 4)]), expected: ["G6:zz"] },
+  { id: "G7", name: "shrunk job", plan: planOf([job("o2", "SMT-2", 0, 3.5)]), expected: ["G7:o2"] },
+  {
+    id: "G7",
+    name: "missing setup after a family change",
+    plan: planOf([job("o2", "SMT-1", 4, 8)]), // f1 is family A, o2 is B: needs 4.5 h
+    expected: ["G7:o2"],
+  },
+  {
+    id: "G8",
+    name: "commitment on a stale stock snapshot",
+    s: snapshot({
+      nowShift: 5,
+      orders: [order({ orderId: "o1", bom: [{ partNumber: "CAP", qtyPer: 1 }] })],
+      stock: [{ partNumber: "CAP", onHand: 1000 }],
+      dataAsOfShift: { erp_routing: 5, erp_stock: 1, mes_cycle_times: 5 },
+    }),
+    plan: planOf([job("o1", "SMT-1", 4, 8)]),
+    expected: ["G8:o1"],
+  },
+  {
+    id: "G8",
+    name: "commitment on stale MES data when the data view includes it",
+    s: snapshot({ nowShift: 5, dataAsOfShift: { erp_routing: 5, erp_stock: 5, mes_cycle_times: 1 } }),
+    plan: planOf([job("o2", "SMT-2", 0, 4)]),
+    dataView: { includeMesCycleTimes: true, maxDataAgeShifts: 2 },
+    expected: ["G8:o2"],
+  },
+];
+
+describe.each(cases)("$id fails: $name", ({ s, plan, dataView, scope, expected }) => {
+  test("reports exactly the expected failures", () => {
+    expect(ids(s ?? snapshot(), plan, dataView, scope)).toEqual(expected);
   });
 });
 
-describe("G4 inside horizon", () => {
-  test("passes inside", () => expect(g4InsideHorizon([job("o1", "L", 0, 48)], 48)).toEqual([]));
-  test("fails past the end", () =>
-    expect(g4InsideHorizon([job("o1", "L", 40, 49)], 48)).toMatchObject([{ id: "G4" }]));
-});
-
-describe("G5 schema-valid", () => {
-  test("passes a well-formed schedule", () => expect(g5SchemaValid([job("o1", "L", 0, 2)])).toEqual([]));
-  test("fails zero length and duplicate orders", () => {
-    const f = g5SchemaValid([job("o1", "L", 2, 2), job("o1", "L", 3, 4)]);
-    expect(f.map((x) => x.message)).toEqual(["job must end after it starts", "order scheduled more than once"]);
+describe("passing counterparts", () => {
+  test("G2: waits for the arrival", () => {
+    const s = snapshot({
+      orders: [order({ orderId: "o1", bom: [{ partNumber: "IC", qtyPer: 1 }] })],
+      arrivals: [{ partNumber: "IC", qty: 40, arrivalHour: 16, confirmed: true }],
+    });
+    expect(ids(s, planOf([job("o1", "SMT-1", 16, 20)]))).toEqual([]);
   });
-});
-
-describe("G6 in scope", () => {
-  test("passes the granted scope", () => expect(g6InScope("scheduling", "scheduling")).toEqual([]));
-  test("fails another scope", () => expect(g6InScope("scheduling", "purchasing")).toMatchObject([{ id: "G6" }]));
-});
-
-test("runGuardrails reports what it can't check yet", () => {
-  const r = runGuardrails({
-    grantedScope: "scheduling",
-    proposalScope: "scheduling",
-    horizonHours: 48,
-    frozenJobs: [],
-    schedule: [job("o1", "SMT-1", 0, 4)],
+  test("G2: an unconfirmed arrival doesn't count", () => {
+    const s = snapshot({
+      orders: [order({ orderId: "o1", bom: [{ partNumber: "IC", qtyPer: 1 }] })],
+      arrivals: [{ partNumber: "IC", qty: 40, arrivalHour: 16, confirmed: false }],
+    });
+    expect(ids(s, planOf([job("o1", "SMT-1", 16, 20)]))).toEqual(["G2:o1"]);
   });
-  expect(r).toEqual({ ok: true, failures: [], notYetImplemented: ["G2", "G3", "G7", "G8"] });
+  test("G7: setup included after a family change", () => {
+    expect(ids(snapshot(), planOf([job("o2", "SMT-1", 4, 8.5)]))).toEqual([]);
+  });
+  test("G8: stale data is fine with no commitment", () => {
+    const s = snapshot({
+      nowShift: 5,
+      orders: [order({ orderId: "o1", bom: [{ partNumber: "CAP", qtyPer: 1 }] })],
+      stock: [{ partNumber: "CAP", onHand: 1000 }],
+      dataAsOfShift: { erp_routing: 5, erp_stock: 1, mes_cycle_times: 5 },
+    });
+    const plan: Plan = {
+      ...planOf([]),
+      dispositions: [{ orderId: "o1", status: "escalated", commitment: "none" }],
+      escalations: [{ orderId: "o1", reason: "stock snapshot stale" }],
+    };
+    expect(ids(s, plan)).toEqual([]);
+  });
 });

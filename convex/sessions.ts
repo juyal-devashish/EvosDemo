@@ -2,7 +2,8 @@ import { ConvexError, v } from "convex/values";
 import { internalMutation, mutation, query, type MutationCtx } from "./_generated/server";
 import { requireRole, systemActor, type Actor } from "./auth";
 import { writeAudit } from "./lib/records";
-import { scheduleEntry } from "./lib/validators";
+import { SCENARIOS, seedScenario as verifyScenario } from "../sim/scenarios";
+import { factoryFields, seedJob } from "./lib/validators";
 
 const sessionKind = v.union(
   v.literal("suite"),
@@ -47,11 +48,49 @@ export const seed = internalMutation({
     kind: sessionKind,
     faultInjection: v.boolean(),
     injectWriteFailure: v.optional(v.boolean()),
-    jobs: v.array(v.object({ ...scheduleEntry.fields, frozen: v.boolean() })),
+    currentShift: v.optional(v.number()),
+    factory: v.object(factoryFields),
+    jobs: v.array(seedJob),
   },
-  handler: async (ctx, { jobs, ...args }) => {
+  handler: async (ctx, { jobs, factory, currentShift, ...args }) => {
     const sessionId = await insertSession(ctx, systemActor("seed"), args);
+    if (currentShift !== undefined) await ctx.db.patch(sessionId, { currentShift });
+    await ctx.db.insert("factory", { sessionId, ...factory });
     for (const job of jobs) await ctx.db.insert("jobs", { sessionId, ...job });
+    return sessionId;
+  },
+});
+
+/**
+ * Seed a suite session from an rs-1.0 scenario. The oracle's witness is
+ * verified by the guardrails first; seeding fails otherwise (SPEC §4).
+ */
+export const seedFromScenario = internalMutation({
+  args: { scenarioId: v.string(), label: v.optional(v.string()) },
+  handler: async (ctx, { scenarioId, label }) => {
+    const scenario = SCENARIOS.find((s) => s.id === scenarioId);
+    if (scenario === undefined) throw new ConvexError({ code: "not_found", scenarioId });
+    verifyScenario(scenario);
+    const { snapshot } = scenario;
+    const sessionId = await insertSession(ctx, systemActor("seed"), {
+      label: label ?? `rs-1.0/${scenarioId}`,
+      kind: "suite",
+      faultInjection: false,
+      injectWriteFailure: scenario.injectWriteFailure,
+    });
+    await ctx.db.patch(sessionId, { currentShift: snapshot.nowShift });
+    await ctx.db.insert("factory", {
+      sessionId,
+      lines: snapshot.lines,
+      orders: snapshot.orders,
+      standardCycleTimes: snapshot.standardCycleTimes,
+      mesObservations: snapshot.mesObservations,
+      stock: snapshot.stock,
+      arrivals: snapshot.arrivals,
+      reservations: snapshot.reservations,
+      dataAsOfShift: snapshot.dataAsOfShift,
+    });
+    for (const job of snapshot.frozenJobs) await ctx.db.insert("jobs", { sessionId, ...job, frozen: true });
     return sessionId;
   },
 });
