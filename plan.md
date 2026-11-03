@@ -270,7 +270,7 @@ Medium costs about the same as low here (~$0.01/call). Impossible-deadline has n
 
 ---
 
-## Step 6 — Synthetic reviewer, monitor and validation (no AI)
+## Step 6 — Synthetic reviewer, monitor and validation (no AI) ✅
 
 **Build**
 - `sim/` synthetic reviewer (§10.2):
@@ -301,6 +301,27 @@ Medium costs about the same as low here (~$0.01/call). Impossible-deadline has n
 **Decision point (§18):** confirm `pCatch` and `pPicky` before freezing.
 
 **Done when** the validation numbers are recorded and the config is frozen.
+
+**As built**
+- **Stats** ([stats/](stats/)): exact binomial tail; one-sided Clopper–Pearson bounds (77/80 → 0.906, 76/80 → 0.889, as in §10.6); EWMA with λ 0.2, L 3, the baseline from the first 20 shifts, context only.
+- **Monitoring rule** ([stats/rule.ts](stats/rule.ts)): 3-day windows, evaluated when the window's reviews are in or 2 days after it closes, whichever is first. Pending reviews are flagged and never counted. n < 15 is insufficient data. α = 0.00135.
+- **Synthetic reviewer** ([sim/reviewer.ts](sim/reviewer.ts)): it wants to edit when any C or T check fails, or a duration is more than 10% off the true duration. It catches that with pCatch = 0.9, and edits a correct plan with pPicky = 0.03.
+- **Pools:** the 160 recorded rs-1.0 proposals, exported to [stats/pools.json](stats/pools.json).
+  - Healthy pool: 40 unique op-v1 proposals on routine scenarios; none should be edited.
+  - Drifted pool: 10 unique op-v1 slow-machine proposals; all should be edited.
+- **p₀ = 0.9688**, from a separate baseline dataset (20,000 synthetic reviews, seed 900001). It's largely designed in by pPicky, and is disclosed as an assumption.
+- **Frozen config:** [stats/config.ts](stats/config.ts), commit `8aab8c5`, frozen before the recorded session.
+
+**Validation** ([stats/validation-report.json](stats/validation-report.json); 1,000 seeded replays per condition, 30-day horizon, drift from day 10, 6 routine proposals/day)
+
+| Condition | Result (95% CI) | Detection delay |
+|---|---|---|
+| Healthy | P(≥1 false demotion in 30 days) = 0.2% (0.02–0.7%) | – |
+| Drift affects 25% of routine proposals | detected 97.6% (96.4–98.5%); 2.4% not detected by day 30 | median 6 days, p90 13 |
+| Drift 50% | detected 100% (99.6–100%) | median 4, p90 4 |
+| Drift 100% | detected 100% (99.6–100%) | median 4, p90 4 |
+
+These are claims about the monitor's statistical behavior on resampled pools with only 40 and 10 unique proposals. They are not claims about AI behavior on new states.
 
 ---
 
@@ -394,5 +415,5 @@ None of the mandatory tests are cut.
 |---|---|
 | Model choice after the cost pilot | **Decided: `claude-opus-5-5`, effort low** (Sonnet 5.5 tried and dropped) |
 | Trial counts and pool sizes if the budget is tight | **Not needed: ~$0.023/call → ~$12 for the plan** |
-| `pCatch` / `pPicky` | Before the step 6 freeze |
+| `pCatch` / `pPicky` | **Kept at 0.9 / 0.03 (frozen in `8aab8c5`)** |
 | Public repo vs. access on request | **Decided: public** (github.com/juyal-devashish/EvosDemo) |
