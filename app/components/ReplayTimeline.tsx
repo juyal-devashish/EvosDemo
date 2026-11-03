@@ -3,7 +3,8 @@
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
-import { LEVEL, shortHash } from "../labels";
+import { formatChance, formatCount, formatPercent } from "../format";
+import { LEVEL, TRIGGER, WINDOW_STATUS, shortHash } from "../labels";
 
 // Act 2 on the public results page: the recorded fault-injection replay.
 // Every number comes from the replay's stored records.
@@ -71,13 +72,13 @@ export function ReplayTimeline() {
               <th scope="col">Monitor window</th>
               <th scope="col">Release</th>
               <th scope="col" className="num">
-                Agreed
+                Plans agreed
               </th>
               <th scope="col" className="num">
-                Pending
+                Waiting for review
               </th>
               <th scope="col" className="num">
-                P(X ≤ x | p₀)
+                Chance a healthy AI looks this bad
               </th>
               <th scope="col">Result</th>
             </tr>
@@ -89,14 +90,12 @@ export function ReplayTimeline() {
                   days {w.startDay}–{w.endDay} (evaluated day {w.evaluatedOnDay})
                 </td>
                 <td>{version(w.manifestHash)}</td>
-                <td className="num">
-                  {w.x}/{w.n}
-                </td>
+                <td className="num">{formatCount(w.x, w.n)}</td>
                 <td className="num">{w.pending}</td>
-                <td className="num">{w.pValue === null ? "—" : w.pValue.toExponential(2)}</td>
+                <td className="num">{w.pValue === null ? "—" : formatChance(w.pValue)}</td>
                 <td>
                   <span className={`badge ${w.status === "signal" ? "badge-fail" : w.status === "ok" ? "badge-pass" : "badge-warn"}`}>
-                    {w.status === "signal" ? "Signal" : w.status === "ok" ? "OK" : "Insufficient data"}
+                    {WINDOW_STATUS[w.status] ?? w.status}
                   </span>
                 </td>
               </tr>
@@ -104,18 +103,40 @@ export function ReplayTimeline() {
           </tbody>
         </table>
       </div>
-      <p className="small muted">
-        Signal if P(X ≤ x | n, p₀) ≤ α = {data.windows[0]?.alpha ?? 0.00135}, with p₀ = {data.windows[0]?.p0 ?? "—"} frozen
-        before this session. p₀ is largely set by the reviewer model&apos;s pPicky, an assumption.
-      </p>
+      <details className="section">
+        <summary>How to read this table</summary>
+        <ul className="plain-list">
+          <li>
+            <strong>Plans agreed:</strong> how many of the AI&apos;s plans the reviewer left alone.
+          </li>
+          <li>
+            <strong>Chance a healthy AI looks this bad:</strong> if the AI were still working normally, how often it would
+            score this badly by luck alone. A tiny chance means it isn&apos;t luck.
+          </li>
+          <li>
+            <strong>Alarm:</strong> rings when that chance falls below {formatPercent(data.windows[0]?.alpha ?? 0.00135)}. The
+            system then takes the AI&apos;s power away automatically.
+          </li>
+          <li>
+            <strong>Normal health level:</strong> a healthy AI normally has about {formatPercent(data.windows[0]?.p0 ?? 0.97)} of
+            its plans agreed. That level is largely built into the simulated reviewer&apos;s settings, so treat it as an
+            assumption.
+          </li>
+        </ul>
+      </details>
 
       <p className="eyebrow section">Permission changes</p>
       <ol className="plain-list">
         {data.permissionChanges.map((c) => (
           <li key={c.id} className="small">
             <span className="mono">{version(c.manifestHash)}</span>: {LEVEL[c.from] ?? c.from} → <strong>{LEVEL[c.to] ?? c.to}</strong>{" "}
-            <span className="muted">({c.trigger.replaceAll("_", " ")})</span>
-            {c.note && <div className="muted">{c.note}</div>}
+            <span className="muted">({TRIGGER[c.trigger] ?? c.trigger})</span>
+            {/* The stored note for an alarm quotes statistics; show a plain sentence instead. */}
+            {c.trigger === "monitor_signal" ? (
+              <div className="muted">The monitor&apos;s alarm rang, so the system demoted it automatically. No person did this.</div>
+            ) : (
+              c.note && <div className="muted">{c.note}</div>
+            )}
           </li>
         ))}
       </ol>
