@@ -138,9 +138,19 @@ function SessionActions({ sessionId }: { sessionId: Id<"sessions"> }) {
   const promote = useAction(useMutation(api.permissions.promoteToSupervised));
   const request = useAction(useMutation(api.operator.request));
   const promoteLimited = useAction(useMutation(api.permissions.promoteToLimited));
+  const advance = useAction(useMutation(api.boundary.advance));
   if (data === undefined) return <p className="muted">Loading…</p>;
   return (
     <>
+      <div className="row" style={{ marginBottom: 16 }}>
+        <span className="mono small" data-testid="qa-shift">
+          shift {data.session.currentShift} · state v{data.session.stateVersion}
+        </span>
+        <button className="button-primary" disabled={advance.busy} onClick={() => advance.run({ sessionId })} data-testid="advance">
+          {advance.busy ? "Advancing…" : "Advance one shift"}
+        </button>
+        <span className="small muted">Runs the shift boundary: close the period, evaluate the monitor, then release queued actions.</span>
+      </div>
       <div className="table-wrap">
         <table>
           <thead>
@@ -197,9 +207,9 @@ function SessionActions({ sessionId }: { sessionId: Id<"sessions"> }) {
       <p className="small muted section">
         Authorizing needs a passed rs-1.0 verdict for that exact manifest; the backend refuses it otherwise.
       </p>
-      {(promote.error || request.error || promoteLimited.error) && (
+      {(promote.error || request.error || promoteLimited.error || advance.error) && (
         <p className="notice notice-error section" role="alert">
-          {promote.error ?? request.error ?? promoteLimited.error}
+          {promote.error ?? request.error ?? promoteLimited.error ?? advance.error}
         </p>
       )}
     </>
