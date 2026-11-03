@@ -12,7 +12,7 @@ Steps 0–7 are done: Next.js 16 App Router, Convex (cloud project `evosdemo`; `
 
 Next.js 16 differs from older versions (for example, the global `LayoutProps` route types come from `next typegen`). Check `node_modules/next/dist/docs/` before writing Next code.
 
-[plan.md](plan.md) is the step-by-step build plan: done criteria, which tests each step needs, and where to stop and ask before making API calls or deploying. Follow it, and keep it updated as steps finish.
+[plan.md](docs/plan.md) is the step-by-step build plan: done criteria, which tests each step needs, and where to stop and ask before making API calls or deploying. Follow it, and keep it updated as steps finish.
 
 ## Architecture (big picture from SPEC.md)
 
