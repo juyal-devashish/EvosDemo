@@ -1,4 +1,4 @@
-# Earned Autonomy
+# EvosDemo
 
 A release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory. It's an independent work sample for the Evos Product & AI Quality Engineer role, not an Evos product.
 
