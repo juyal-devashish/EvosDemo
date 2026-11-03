@@ -6,8 +6,8 @@ import { maxCostUsd, maxInputTokensFor } from "../operator/pricing";
 import { SYSTEM_PROMPT } from "../operator/prompt";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { internalAction, internalMutation, internalQuery } from "./_generated/server";
-import { systemActor } from "./auth";
+import { internalAction, internalMutation, internalQuery, mutation } from "./_generated/server";
+import { requireRole, systemActor } from "./auth";
 import { reserve, settle } from "./budget";
 import { loadSnapshot } from "./lib/factory";
 import { getSession, writeAudit } from "./lib/records";
@@ -190,5 +190,25 @@ export const registerManifests = internalAction({
     await ctx.runMutation(internal.permissions.registerManifest, v1);
     await ctx.runMutation(internal.permissions.registerManifest, v2);
     return { opV1: v1.manifestHash, opV2: v2.manifestHash };
+  },
+});
+
+/**
+ * qa asks the operator for a proposal in a session. REAL API CALL (one).
+ * Scheduled so the mutation stays fast; the attempt shows up when done.
+ */
+export const request = mutation({
+  args: { sessionId: v.id("sessions"), manifestHash: v.string(), trigger: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const actor = await requireRole(ctx, ["qa"]);
+    const session = await getSession(ctx, args.sessionId);
+    if (session.kind === "suite") throw new ConvexError({ code: "invalid", message: "suite sessions are driven by suite runs" });
+    await ctx.scheduler.runAfter(0, internal.operator.propose, {
+      sessionId: args.sessionId,
+      manifestHash: args.manifestHash,
+      trigger: args.trigger ?? "manual request",
+    });
+    await writeAudit(ctx, { sessionId: args.sessionId, kind: "operator.requested", actor, refs: [args.manifestHash] });
+    return null;
   },
 });

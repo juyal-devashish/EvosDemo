@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Inter } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import Link from "next/link";
+import { AuthNav } from "./AuthNav";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 import "./globals.css";
 
@@ -17,6 +19,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${inter.variable} ${plexMono.variable}`}>
       <body>
+        <ClerkProvider>
+          <ConvexClientProvider>
         <div className="strip">Simulation · synthetic factory and data · independent work sample, not an Evos product</div>
         <div className="shell">
           <header className="nav">
@@ -24,21 +28,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <span className="mark" aria-hidden="true" />
               Earned Autonomy
             </Link>
-            <nav className="nav-links" aria-label="Main">
-              <Link href="/" aria-current="page">
-                Results
-              </Link>
-            </nav>
-            <div className="nav-meta">
-              <span className="badge badge-neutral">Independent manufacturing demo</span>
-            </div>
+            <AuthNav />
           </header>
-          <ConvexClientProvider>{children}</ConvexClientProvider>
+          {children}
           <footer className="footer">
             Everything here is simulated: the factory, machines, orders and reviewer are synthetic. The operator is a real
             Claude model. Demotion, recovery and monitoring rules are this project&apos;s own design, not Evos&apos;s.
           </footer>
         </div>
+          </ConvexClientProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

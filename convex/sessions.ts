@@ -71,14 +71,20 @@ export const seedFromScenario = internalMutation({
 });
 
 /** Seed one isolated suite session from an rs-1.0 scenario (shared with suite.start). */
-export async function insertScenarioSession(ctx: MutationCtx, scenarioId: string, label?: string) {
+export async function insertScenarioSession(
+  ctx: MutationCtx,
+  scenarioId: string,
+  label?: string,
+  kind: "suite" | "demo" = "suite",
+  actor: Actor = systemActor("seed"),
+) {
   const scenario = SCENARIOS.find((s) => s.id === scenarioId);
   if (scenario === undefined) throw new ConvexError({ code: "not_found", scenarioId });
   verifyScenario(scenario);
   const { snapshot } = scenario;
-  const sessionId = await insertSession(ctx, systemActor("seed"), {
+  const sessionId = await insertSession(ctx, actor, {
     label: label ?? `rs-1.0/${scenarioId}`,
-    kind: "suite",
+    kind,
     faultInjection: false,
     injectWriteFailure: scenario.injectWriteFailure,
   });
@@ -101,4 +107,23 @@ export async function insertScenarioSession(ctx: MutationCtx, scenarioId: string
 export const get = query({
   args: { sessionId: v.id("sessions") },
   handler: async (ctx, { sessionId }) => ctx.db.get(sessionId),
+});
+
+/** qa creates a demo session seeded from a scenario. Demo sessions never allow fault injection. */
+export const createDemo = mutation({
+  args: { scenarioId: v.string(), label: v.optional(v.string()) },
+  handler: async (ctx, { scenarioId, label }) => {
+    const actor = await requireRole(ctx, ["qa"]);
+    return insertScenarioSession(ctx, scenarioId, label ?? `demo/${scenarioId}`, "demo", actor);
+  },
+});
+
+/** Sessions a signed-in reviewer can work in (demo and replay). */
+export const listForReview = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireRole(ctx, ["planner", "qa"]);
+    const all = await ctx.db.query("sessions").order("desc").take(200);
+    return all.filter((s) => s.kind === "demo" || s.kind === "replay");
+  },
 });

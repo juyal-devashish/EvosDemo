@@ -31,3 +31,10 @@ export const CHECK: Record<string, string> = {
 };
 
 export const shortHash = (h: string) => `${h.slice(0, 4)}…${h.slice(-4)}`;
+
+export const LEVEL: Record<string, string> = {
+  shadow: "Shadow",
+  supervised: "Supervised",
+  limited: "Limited autonomy",
+  demoted: "Demoted (supervised)",
+};

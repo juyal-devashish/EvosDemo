@@ -39,12 +39,21 @@ test("the public page shows no mutating controls", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Release suite results" })).toBeVisible();
   await page.waitForLoadState("networkidle");
-  // Scoped to the app shell: in dev, Next.js injects its own dev-tools button.
-  await expect(page.locator(".shell").locator("button, form, input, select, textarea, [role=button]")).toHaveCount(0);
+  // The page content, not the header: the header has a Sign in button, and in
+  // dev Next.js injects its own dev-tools button.
+  await expect(page.locator("main").locator("button, form, input, select, textarea, [role=button]")).toHaveCount(0);
 });
 
 test("simulation and independent-project labels are visible", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText(/Simulation · synthetic factory and data/)).toBeVisible();
   await expect(page.getByText("Independent manufacturing demo")).toBeVisible();
+});
+
+test("signed out, review and QA pages show no data and no controls", async ({ page }) => {
+  for (const path of ["/review", "/qa"]) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Sign in to review|QA only/);
+    await expect(page.locator("main, section.intro").locator("button, select, table")).toHaveCount(0);
+  }
 });

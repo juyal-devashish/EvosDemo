@@ -384,3 +384,150 @@ th.num {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* ── Buttons (UI-GUIDE §6) ─────────────────────────────────────────── */
+
+.button-primary,
+.button-secondary {
+  min-height: 40px;
+  padding: 9px 16px;
+  border-radius: var(--radius-control);
+  font: 500 14px/1.4 var(--font-ui);
+  cursor: pointer;
+  transition: opacity 150ms, background-color 150ms;
+}
+
+.button-primary {
+  background: var(--ink);
+  color: var(--canvas);
+  border: 1px solid var(--ink);
+}
+
+.button-secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+
+.button-primary:disabled,
+.button-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  font: inherit;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.notice {
+  border-radius: var(--radius-control);
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.notice-error {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.notice-warn {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+select.field {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  font: inherit;
+}
+
+/* ── Review workspace and operator card (UI-GUIDE §5, §7) ──────────── */
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  box-shadow: var(--shadow-panel);
+  margin-bottom: 24px;
+}
+
+.checklist {
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.checklist li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.check-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  margin-top: 1px;
+}
+
+.check-pass .check-icon {
+  background: var(--active-blue);
+  color: #fff;
+}
+
+.check-fail .check-icon {
+  background: var(--danger);
+  color: #fff;
+}
+
+.check-reason {
+  display: block;
+  font-size: 12px;
+  color: var(--danger);
+}
+
+.plain-list {
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+details summary {
+  cursor: pointer;
+  font-size: 14px;
+}
