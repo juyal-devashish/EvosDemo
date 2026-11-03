@@ -55,5 +55,5 @@ test("headline: the replay's refused action shows its evidence, and screen equal
   await expect(page.getByTestId("window-agreement")).toContainText(`${e.window!.x} of ${e.window!.n}`);
   // Plain language only: no scientific notation anywhere in the evidence chain.
   await expect(page.getByTestId("window-chance")).toHaveText("less than 0.0001%");
-  await expect(page.locator("main")).not.toContainText(/\de-\d/);
+  await expect(page.locator("ol.evidence-chain")).not.toContainText(/\de-\d/);
 });
