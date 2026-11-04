@@ -583,3 +583,165 @@ details summary {
 .evidence-step {
   border-left: 3px solid var(--danger);
 }
+
+/* ── Architecture page: diagram marks and figure frames ────────────── */
+
+.arch {
+  --ink-2: #4a4a47;
+  --line-2: rgba(30, 30, 30, 0.34);
+  --accent: var(--active-blue);
+}
+
+.arch-cap {
+  color: var(--muted);
+  font-size: 14px;
+  max-width: 74ch;
+  margin: 4px 0 12px;
+}
+
+.arch-frame {
+  margin: 0;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 14px;
+}
+
+.arch-frame svg {
+  display: block;
+  width: 100%;
+  min-width: 900px;
+  height: auto;
+}
+
+.arch-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.arch-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.arch .key {
+  width: 28px;
+  height: 0;
+  border-top: 2px solid var(--ink-2);
+}
+
+.arch .key-a {
+  border-color: var(--accent);
+}
+
+.arch .key-d {
+  border-color: var(--danger);
+}
+
+.arch .key-x {
+  border-top-style: dashed;
+}
+
+.arch .zone {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 1.1;
+}
+
+.arch .node {
+  fill: var(--canvas);
+  stroke: var(--line-2);
+  stroke-width: 1.2;
+}
+
+.arch .node-accent {
+  stroke: var(--accent);
+  stroke-width: 1.7;
+}
+
+.arch .node-danger {
+  fill: var(--danger-bg);
+  stroke: var(--danger);
+  stroke-width: 1.7;
+}
+
+.arch .node-muted {
+  stroke-dasharray: 4 4;
+  fill: none;
+}
+
+.arch .node-tag {
+  fill: var(--surface);
+  stroke: var(--border);
+}
+
+.arch .ln {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.4;
+}
+
+.arch .ln-a {
+  stroke: var(--accent);
+  stroke-width: 1.8;
+}
+
+.arch .ln-d {
+  stroke: var(--danger);
+  stroke-width: 1.8;
+}
+
+.arch .ln-dash {
+  stroke-dasharray: 5 4;
+}
+
+.arch .mk {
+  fill: var(--ink-2);
+}
+
+.arch .mk-a {
+  fill: var(--accent);
+}
+
+.arch .mk-d {
+  fill: var(--danger);
+}
+
+.arch .tx {
+  font: 500 13px var(--font-ui);
+  fill: var(--ink);
+}
+
+.arch .ts {
+  font: 400 11.5px var(--font-ui);
+  fill: var(--muted);
+}
+
+.arch .tm {
+  font: 400 11px var(--font-data);
+  fill: var(--ink);
+}
+
+.arch .eb {
+  font: 500 10.5px var(--font-data);
+  letter-spacing: 0.14em;
+  fill: var(--muted);
+}
+
+.arch .tx.tx-a,
+.arch .ts.tx-a {
+  fill: var(--accent);
+}
+
+.arch .tx.tx-d,
+.arch .ts.tx-d {
+  fill: var(--danger);
+}
