@@ -67,7 +67,7 @@ npm run test:e2e      # Playwright
 | `sim/` | Scheduling model, exhaustive oracle, rs-1.0 scenarios, routine snapshots, synthetic reviewer |
 | `stats/` | Binomial test, Clopper–Pearson, EWMA, monitor simulation, frozen config, validation report |
 | `operator/` | Prompt, plan schema, manifests, data view, model call, pricing |
-| `app/` | Public results and evidence pages, review panel, QA console |
+| `app/` | Public results, evidence and architecture pages, review panel, QA console |
 | `tests/` | Backend tests (`convex-test`) and Playwright |
 | `scripts/` | Monitor baseline and validation, walkthrough recorder |
 | `docs/` | Spec and build plan |
