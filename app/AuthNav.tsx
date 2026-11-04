@@ -20,6 +20,7 @@ export function AuthNav() {
     <>
       <nav className="nav-links" aria-label="Main">
         {link("/", "Results")}
+        {link("/architecture", "Architecture")}
         {me?.role && link("/review", "Review")}
         {me?.role === "qa" && link("/qa", "QA")}
       </nav>
