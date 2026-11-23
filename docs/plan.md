@@ -402,7 +402,7 @@ These are claims about the monitor's statistical behavior on resampled pools wit
 
 **As built (2026-11-03)**
 - **Convex:** personal dev is `savory-viper-342`, and production is `savory-hyena-968`. Both were loaded from a snapshot of the local deployment (4,044 records, including the ledger at $7.15).
-- **Vercel:** connected to GitHub, so pushes to `main` deploy. The README no longer links the site; the repo is shared on its own.
+- **Vercel:** https://earned-autonomy.vercel.app, connected to GitHub, so pushes to `main` deploy. The original domain redirects there (308).
 - **Clerk:** the development instance works on the Vercel domain without allowed-origins changes.
 - **The user ran the production steps** (`convex deploy`, `env set --prod`, `import --prod`, Vercel env vars). Claude Code's auto-mode classifier blocks those for the agent.
 - **Verified:** all 8 Playwright tests pass against production (`E2E_BASE_URL`).
