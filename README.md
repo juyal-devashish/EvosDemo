@@ -2,6 +2,8 @@
 
 A release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory. It's an independent project; the factory and data are simulated.
 
+**Live:** https://earned-autonomy.vercel.app. Results and evidence are public; Review and QA need a signed-in planner or qa account.
+
 ## Why I built this
 
 At Micron I worked on real-time sensor anomaly detection in a wafer fab. Two things stuck with me. First, equipment drifts: a tool's temperature creeps, so what counted as normal last quarter isn't normal now, and a model that was right then can be quietly wrong today. Second, people on the floor either trusted automation completely or ignored it. Nothing let trust grow with evidence or shrink when the evidence turned.
@@ -28,7 +30,7 @@ The operator (Claude Opus 5.5) earns autonomy step by step: **shadow → supervi
 **2. Fault-injection replay (labeled as such).** What if a defect like op-v1's slipped past the gate? In an isolated session, op-v1 is deliberately given limited autonomy, and from day 4 SMT-2 runs 30% slow.
 - The synthetic reviewer's agreement falls from 17/17 to 0/17.
 - The monitor's binomial test signals and demotes op-v1.
-- At the next shift boundary, the backend **refuses its queued action**, and the evidence viewer shows the whole chain behind that refusal.
+- At the next shift boundary, the backend **refuses its queued action**, and the [evidence viewer](https://earned-autonomy.vercel.app) shows the whole chain behind that refusal.
 - **Recovery:** op-v2 earned 78/80 fresh supervised reviews (95% lower bound 0.923, above the 0.90 floor), and qa authorized it back to limited autonomy.
 
 ![Fault-injection replay: review agreement falls on day 4, the monitor alarms, op-v1 is demoted and op-v2 recovers](docs/img/demotion-refusal.png)
