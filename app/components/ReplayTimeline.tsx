@@ -62,7 +62,7 @@ export function ReplayTimeline() {
         ))}
       </div>
       <p className="small muted">
-        Blue: agreed. Red: the reviewer edited the plan. Recovery-phase reviews are supervised (before execution).
+        Teal: agreed. Red: the reviewer edited the plan. Recovery-phase reviews are supervised (before execution).
       </p>
 
       <div className="table-wrap section">

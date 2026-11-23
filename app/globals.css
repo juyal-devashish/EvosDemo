@@ -1,26 +1,26 @@
-/* Design tokens: warm-white canvas, charcoal ink, one blue accent. Light theme only. */
+/* Design tokens: cool-grey canvas, slate ink, one teal accent. Light theme only. */
 :root {
-  --canvas: #fffffc;
-  --ink: #1e1e1e;
-  --muted: #6b6b6b;
-  --brand-lime: #bdd13a;
-  --manufacturing-orange: #ff4400;
-  --active-blue: #0026ff;
-  --tag-gray: #d7d7d7;
+  --canvas: #f6f7f9;
+  --ink: #111827;
+  --muted: #5b6472;
+  --banner: #1f2937;
+  --banner-ink: #f3f4f6;
+  --accent: #0f766e;
+  --accent-bright: #2dd4bf;
 
-  --surface: #fffefb;
-  --border: rgba(30, 30, 30, 0.12);
-  --subtle: rgba(30, 30, 30, 0.04);
+  --surface: #ffffff;
+  --border: rgba(17, 24, 39, 0.12);
+  --subtle: rgba(17, 24, 39, 0.05);
   --danger: #b42318;
   --danger-bg: #fef3f2;
-  --warning: #92400e;
+  --warning: #b45309;
   --warning-bg: #fffbeb;
-  --success: #166534;
-  --success-bg: #f0fdf4;
+  --success: #0f766e;
+  --success-bg: #f0fdfa;
   --radius-control: 8px;
   --radius-badge: 5px;
   --radius-panel: 16px;
-  --shadow-panel: 0 20px 48px rgba(30, 30, 30, 0.12);
+  --shadow-panel: 0 20px 48px rgba(17, 24, 39, 0.10);
   --font-ui: var(--font-inter), "Helvetica Neue", Arial, sans-serif;
   --font-data: var(--font-plex-mono), "Courier New", monospace;
   color-scheme: light;
@@ -50,7 +50,7 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--active-blue);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -64,8 +64,8 @@ a {
 /* ── Shell ─────────────────────────────────────────────────────────── */
 
 .strip {
-  background: var(--brand-lime);
-  color: var(--ink);
+  background: var(--banner);
+  color: var(--banner-ink);
   font: 400 11px/1.5 var(--font-data);
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -108,7 +108,7 @@ a {
   content: "";
   position: absolute;
   inset: 6px 6px 6px 11px;
-  background: var(--brand-lime);
+  background: var(--accent-bright);
   border-radius: 2px;
 }
 
@@ -504,7 +504,7 @@ select.field {
 }
 
 .check-pass .check-icon {
-  background: var(--active-blue);
+  background: var(--accent);
   color: #fff;
 }
 
@@ -556,7 +556,7 @@ details summary {
 }
 
 .bar-agree {
-  background: var(--active-blue);
+  background: var(--accent);
 }
 
 .bar-edit {
@@ -587,9 +587,8 @@ details summary {
 /* ── Architecture page: diagram marks and figure frames ────────────── */
 
 .arch {
-  --ink-2: #4a4a47;
-  --line-2: rgba(30, 30, 30, 0.34);
-  --accent: var(--active-blue);
+  --ink-2: #374151;
+  --line-2: rgba(17, 24, 39, 0.34);
 }
 
 .arch-cap {
