@@ -11,7 +11,7 @@ const inter = Inter({ variable: "--font-inter", subsets: ["latin"], weight: ["30
 const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500"] });
 
 export const metadata: Metadata = {
-  title: "EvosDemo",
+  title: "Earned Autonomy",
   description:
     "Release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory. An independent work sample.",
 };
@@ -22,12 +22,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <ClerkProvider>
           <ConvexClientProvider>
-        <div className="strip">Simulation · synthetic factory and data · independent work sample, not an Evos product</div>
+        <div className="strip">Simulation · synthetic factory and data · independent project</div>
         <div className="shell">
           <header className="nav">
-            <Link href="/" className="brand" aria-label="EvosDemo, results">
+            <Link href="/" className="brand" aria-label="Earned Autonomy, results">
               <span className="mark" aria-hidden="true" />
-              EvosDemo
+              Earned Autonomy
             </Link>
             {/* AuthNav reads the URL (usePathname); under cacheComponents that runtime read needs a Suspense boundary. */}
             <Suspense fallback={<div className="nav-meta" />}>
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <footer className="footer">
             Everything here is simulated: the factory, machines, orders and reviewer are synthetic. The operator is a real
-            Claude model. Demotion, recovery and monitoring rules are this project&apos;s own design, not Evos&apos;s.
+            Claude model. Demotion, recovery and monitoring rules are this project&apos;s own design.
           </footer>
         </div>
           </ConvexClientProvider>

@@ -6,7 +6,7 @@ test("the Architecture tab opens a page with all four diagrams", async ({ page }
   await page.goto("/");
   await page.getByRole("link", { name: "Architecture" }).click();
   await expect(page).toHaveURL(/\/architecture$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("How EvosDemo works");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("How Earned Autonomy works");
   await expect(page.locator("main svg")).toHaveCount(4);
   for (const title of ["1 · Where things run", "2 · How a plan is made", "3 · How a plan becomes a change, or a refusal", "4 · How trust moves"]) {
     await expect(page.getByRole("heading", { name: title })).toBeVisible();

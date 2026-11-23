@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 import { PlanPath, PlanToChange, SystemMap, TrustLadder } from "./figures";
 
 export const metadata: Metadata = {
-  title: "Architecture · EvosDemo",
+  title: "Architecture · Earned Autonomy",
   description:
-    "Four diagrams of how EvosDemo works: where things run, how a plan is made, how it becomes a factory change or a refusal, and how trust moves.",
+    "Four diagrams of how Earned Autonomy works: where things run, how a plan is made, how it becomes a factory change or a refusal, and how trust moves.",
 };
 
 // Static page: no data, no sign-in. Each figure makes one claim, stated in its caption.
@@ -46,7 +46,7 @@ export default function ArchitecturePage() {
     <main className="arch">
       <section className="intro">
         <p className="eyebrow">System map</p>
-        <h1 className="page-title">How EvosDemo works</h1>
+        <h1 className="page-title">How Earned Autonomy works</h1>
         <p className="lede">
           Four pictures: where things run, how a plan is made, how a plan becomes a factory change (or is refused), and how
           trust moves up and down.
@@ -83,7 +83,7 @@ export default function ArchitecturePage() {
 
       <p className="small muted section">
         Drawn from the code: convex/operator.ts, convex/execute.ts, convex/boundary.ts, convex/monitor.ts and
-        convex/permissions.ts. The demotion, recovery and monitoring rules are this project&apos;s own design, not Evos&apos;s.
+        convex/permissions.ts. The demotion, recovery and monitoring rules are this project&apos;s own design.
       </p>
     </main>
   );

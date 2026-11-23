@@ -1,4 +1,4 @@
-// Records a silent, captioned walkthrough of the live site (both acts).
+// Records a silent, captioned walkthrough of the site (both acts), local by default.
 //   npx tsx scripts/record-demo.ts [baseUrl] [outDir]
 // Needs the Clerk keys and E2E_QA_EMAIL in .env.local for the QA scenes.
 // Read-only: it never clicks a button that changes state.
@@ -6,7 +6,7 @@ import { clerk, clerkSetup, setupClerkTestingToken } from "@clerk/testing/playwr
 import { chromium, type Page } from "@playwright/test";
 import { e2eUser, loadEnvLocal } from "../tests/e2e/env";
 
-const BASE = process.argv[2] ?? "https://evosdemo.vercel.app";
+const BASE = process.argv[2] ?? "http://localhost:3000";
 const OUT = process.argv[3] ?? "demo-video";
 const SIZE = { width: 1280, height: 800 };
 
@@ -58,7 +58,7 @@ async function main() {
   // ── Act 1 ──────────────────────────────────────────────────────────
   await page.goto(BASE);
   await page.getByTestId("verdict-text").first().waitFor();
-  await caption(page, "EvosDemo: an AI scheduling operator earns autonomy, release by release. Independent work sample; factory and data are simulated.", 4500);
+  await caption(page, "Earned Autonomy: an AI scheduling operator earns autonomy, release by release. Independent work sample; factory and data are simulated.", 4500);
   await caption(page, "Act 1: every release runs the same suite, rs-1.0: 8 factory scenarios × 10 trials, each a real Claude call.");
   await scrollTo(page, '[data-testid="manifest-op-v1"]');
   await caption(page, "op-v1 can't see observed machine cycle times. It fails: C4 on slow-machine, 10/10 trials.", 4000);
@@ -113,7 +113,7 @@ async function main() {
 
   await page.goto(BASE);
   await page.getByTestId("verdict-text").first().waitFor();
-  await caption(page, "Autonomy is earned by evidence, and lost automatically when the evidence turns. evosdemo.vercel.app", 4500);
+  await caption(page, "Autonomy is earned by evidence, and lost automatically when the evidence turns.", 4500);
 
   const video = page.video();
   await context.close();

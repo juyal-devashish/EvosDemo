@@ -4,7 +4,7 @@ Guidance for AI coding agents (Claude Code, Codex, Cursor, etc.) working in this
 
 ## Project
 
-**EvosDemo:** a release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory.
+**Earned Autonomy:** a release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory.
 
 - **[SPEC.md](docs/SPEC.md) is the source of truth.** Read the relevant section before changing behavior. If code and spec disagree, flag it; don't silently pick one.
 - Build in the order of SPEC §14 (hardest guarantee first). Don't start UI work before the backend guarantees and their tests pass.
@@ -60,7 +60,7 @@ Stack: TypeScript (strict), Next.js/React, Convex (including scheduled fan-out a
 **Statistics and claims**
 - Freeze monitoring thresholds and baselines in config **before** running the data they apply to. Don't retune to get a nicer result.
 - Label synthetic data, the synthetic reviewer and fault-injection sessions everywhere they appear (UI, README, charts).
-- Don't present simulated results as measured performance, and don't describe this as Evos's implementation (SPEC §1, §15).
+- Don't present simulated results as measured performance, and don't describe this as any real product's implementation (SPEC §1, §15).
 
 **Code hygiene**
 - Small modules matching the repo layout in SPEC §16. Match the surrounding code's naming and comment density.

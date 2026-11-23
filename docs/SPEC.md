@@ -1,8 +1,8 @@
-# EvosDemo — Technical Specification
+# Earned Autonomy — Technical Specification
 
 A release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory.
 
-**Context:** work sample for the Evos Product & AI Quality Engineer role. §1 separates what comes from Evos's public material from what is my own design.
+**Context:** an independent project. §1 separates the common patterns it builds on from what is my own design.
 
 ---
 
@@ -24,22 +24,21 @@ A release suite, permission system and production monitor for one AI scheduling 
 
 **Scope:**
 - **One workflow, fully checked:** production scheduling in a simplified simulated PCB factory.
-- **Out of scope:** purchase orders, customer notices, Undo, real integrations, any claim about Evos internals.
+- **Out of scope:** purchase orders, customer notices, Undo, real integrations, any claim about how a real product works internally.
 - This is **a bounded scheduler for a simplified simulated factory**, not a general scheduler.
 
 ---
 
-## 1. What's grounded in Evos's public material vs. what's mine
+## 1. Common patterns this builds on vs. what's mine
 
 | Item | Source | Use |
 |---|---|---|
-| Shadow → Supervised → Autonomous, granted as decisions match the team's | [Architecture page](https://getevos.ai/technology/architecture) §05 | Core premise |
-| Guardrails, sign-off thresholds, escalation; every action logged | Same page | Permission model, audit log |
-| Synchronized data layer over ERP/MES | Same page §01 | Operator data-view config |
-| "Agreement with team" metric (illustrative widget) | Same page | Name of the monitored metric |
-| Config-driven platform | Evos JD | `op-v1` defect is a config change |
-| Manufacturing exception examples | [Manufacturing](https://getevos.ai/solutions/manufacturing), [PCB](https://getevos.ai/solutions/manufacturing/electronics-and-pcb-assembly) pages | Scenario design |
-| ~97% figure (freight invoice audit) | [Announcement](https://getevos.ai/resources/blog/evos-raises-9m) | **Not used** as a target or benchmark |
+| Shadow → supervised → autonomous, granted as decisions match the team's | A common way to roll out AI agents | Core premise |
+| Guardrails, sign-off thresholds, escalation; every action logged | Common practice for agents that change business systems | Permission model, audit log |
+| One data layer over ERP and MES | Typical factory integration | Operator data-view config |
+| Reviewer agreement | Standard measure of whether an agent's decisions match people's | The monitored metric |
+| Config-driven operator | Typical agent platforms | `op-v1` defect is a config change |
+| Manufacturing exceptions (material shortage, slow machine, conflicting priorities) | Typical electronics-assembly problems | Scenario design |
 | Demotion, recovery, monitoring rule, fault-injection method | **Mine** | Labeled as my implementation |
 
 ---
@@ -365,16 +364,16 @@ The report shows the **number of unique underlying proposals** in each pool. Res
 ## 15. Honesty notes
 - The factory, machines, reviewer and outcomes are synthetic. The reviewer is a model, and its rates are disclosed.
 - `op-v1` failed the release gate. The revocation story is a **labeled fault-injection replay** asking what happens if such a defect slips through.
-- Demotion, recovery and monitoring rules are my design, not Evos's.
-- No Evos accuracy figure is used as a benchmark.
-- Micron: equipment-drift detection and maintenance work-order automation. This project applies that thinking to an AI operator.
+- Demotion, recovery and monitoring rules are my design.
+- No outside accuracy figure is used as a target or benchmark.
+- Background: equipment-drift detection and maintenance work-order automation at Micron, and change-detection research at Michigan. This project applies both to an AI operator. The monitor uses a windowed binomial test, not a sequential one.
 
 ---
 
 ## 16. Repo layout
 
 ```
-EvosDemo/
+earned-autonomy/
 ├─ app/                      # Next.js (React): public results, suite, monitor, evidence viewer, review panel
 │  └─ api/inngest/route.ts   # Inngest serve endpoint
 ├─ convex/
@@ -412,6 +411,8 @@ EvosDemo/
 | **Fault-injection session** | Session where an unapproved manifest is deliberately given limited autonomy to test monitoring; always labeled |
 | **Synthetic reviewer** | Rule-based model of human reviewers with disclosed error rates (§10.2) |
 | **Floor** | Pre-set minimum review agreement (0.90) that recovery evidence must clear (§10.6) |
+| **Process drift** | The factory changes under a fixed operator (e.g. SMT-2 running 30% slow); the operator itself doesn't change |
+| **Agreement drift** | The operator's decisions stop matching the reviewers'; this is what the monitor detects (§10.4) |
 
 ---
 

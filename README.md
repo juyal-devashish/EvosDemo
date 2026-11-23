@@ -1,9 +1,16 @@
-# EvosDemo
+# Earned Autonomy
 
-A release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory. It's an independent work sample for the Evos Product & AI Quality Engineer role, not an Evos product.
+A release suite, permission system and production monitor for one AI scheduling operator in a simulated PCB factory. It's an independent project; the factory and data are simulated.
 
-- **Live:** https://evosdemo.vercel.app. Results and evidence are public; Review and QA need a signed-in planner or qa account.
-- **Walkthrough:** [Loom video](https://www.loom.com/share/98c262700b4d478b86f9436d93006a86)
+## Why I built this
+
+At Micron I worked on real-time sensor anomaly detection in a wafer fab. Two things stuck with me. First, equipment drifts: a tool's temperature creeps, so what counted as normal last quarter isn't normal now, and a model that was right then can be quietly wrong today. Second, people on the floor either trusted automation completely or ignored it. Nothing let trust grow with evidence or shrink when the evidence turned.
+
+AI agents are now going onto factory floors, and they inherit both problems. This project asks what happens when the factory changes under an agent and its decisions drift out of agreement with the team, and how the system should take that agent's autonomy away before it does damage. At Michigan I studied how to detect a change in a data stream quickly without false alarms. The monitor here asks the same question with a simple windowed binomial test; a sequential test such as CUSUM is the natural next step.
+
+The factory is a simulated electronics (PCB) assembly line, deliberately simpler than a fab.
+
+## What it does
 
 The operator (Claude Opus 5.5) earns autonomy step by step: **shadow → supervised → limited**. It loses it automatically when production reviews go bad.
 
@@ -16,18 +23,26 @@ The operator (Claude Opus 5.5) earns autonomy step by step: **shadow → supervi
 | `op-v1`: its data view lacks observed machine cycle times | **Failed:** C4 on slow-machine, 10/10 trials; T1 on conflicting-priorities, 8/10 |
 | `op-v2`: the fix, which includes observed cycle times | **Passed** rs-1.0, 80/80 |
 
+![Release suite results: op-v1 fails rs-1.0, op-v2 passes](docs/img/release-gate.png)
+
 **2. Fault-injection replay (labeled as such).** What if a defect like op-v1's slipped past the gate? In an isolated session, op-v1 is deliberately given limited autonomy, and from day 4 SMT-2 runs 30% slow.
 - The synthetic reviewer's agreement falls from 17/17 to 0/17.
 - The monitor's binomial test signals and demotes op-v1.
-- At the next shift boundary, the backend **refuses its queued action**, and the [evidence viewer](https://evosdemo.vercel.app) shows the whole chain behind that refusal.
+- At the next shift boundary, the backend **refuses its queued action**, and the evidence viewer shows the whole chain behind that refusal.
 - **Recovery:** op-v2 earned 78/80 fresh supervised reviews (95% lower bound 0.923, above the 0.90 floor), and qa authorized it back to limited autonomy.
+
+![Fault-injection replay: review agreement falls on day 4, the monitor alarms, op-v1 is demoted and op-v2 recovers](docs/img/demotion-refusal.png)
+
+The evidence viewer traces the refusal back to the reviews behind it:
+
+![Evidence for the refused action: refusal, permission change, monitor check, reviews, and the fix](docs/img/evidence.png)
 
 ## What's real and what's simulated
 
 - **Real:** every operator proposal is a real Claude API call, and spend is capped at $18 by an atomic budget reservation. About $7 has been spent in total.
 - **Simulated:** the factory, machines, orders and reviewer are synthetic. The reviewer is a rule-based model with disclosed rates (pCatch 0.9, pPicky 0.03), not independent validation.
 - **Two separate experiments:** the monitor's validation (0.2% false demotions, 97.6–100% detection) comes from resampled recorded proposals. The headline story comes only from the recorded session.
-- **Rules:** demotion, recovery and monitoring rules are this project's own design, not Evos's.
+- **Rules:** the shadow → supervised → limited ladder is a common way to roll out agents; the demotion, recovery and monitoring rules built on it are this project's own design.
 
 ## Start here (5 minutes)
 
@@ -49,13 +64,13 @@ TypeScript, Next.js 16, Convex (all state changes are transactional mutations), 
 npm install
 npm run convex        # your Convex dev deployment; writes .env.local
 npm run dev           # http://localhost:3000
-npm run check         # typecheck + lint + 155 unit/backend tests (no API calls)
+npm run check         # typecheck + lint + 158 unit/backend tests (no API calls)
 npm run test:e2e      # Playwright
 ```
 
 - **Real model calls** need `ANTHROPIC_API_KEY` in the Convex environment (`npx convex env set …`).
 - **Sign-in** needs Clerk keys; `.env.example` lists every variable and where it goes.
-- **Testing the deployed site:** `E2E_BASE_URL=https://evosdemo.vercel.app NEXT_PUBLIC_CONVEX_URL=<prod url> npm run test:e2e`.
+- **Testing a deployed copy:** `E2E_BASE_URL=<site url> NEXT_PUBLIC_CONVEX_URL=<prod url> npm run test:e2e`.
 - **Monitor validation:** `npm run validate:monitor` reproduces it.
 
 ## Where things are

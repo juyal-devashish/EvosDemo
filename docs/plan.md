@@ -1,4 +1,4 @@
-# Implementation Plan — EvosDemo
+# Implementation Plan — Earned Autonomy
 
 How we build [SPEC.md](SPEC.md), step by step. The spec is the source of truth. This file covers the order of work, what "done" means at each step, and where we stop to check in. If this plan and the spec disagree, the spec wins, and we fix this file.
 
@@ -394,15 +394,15 @@ These are claims about the monitor's statistical behavior on resampled pools wit
   - the actual API cost spent
   - the validation results
   - the honesty notes (§15)
-  - what comes from Evos's public material and what is our own design (§1)
+  - which common patterns it builds on and what is our own design (§1)
 - Deploy to Vercel. **Ask first.**
 - A demo video of both acts.
 
 **Done when** the README is accurate against the code, and the deployed public page matches the recorded session.
 
 **As built (2026-11-03)**
-- **Convex:** cloud project `evosdemo`. Personal dev is `savory-viper-342`, and production is `savory-hyena-968`. Both were loaded from a snapshot of the local deployment (4,044 records, including the ledger at $7.15).
-- **Vercel:** https://evosdemo.vercel.app, connected to GitHub, so pushes to `main` deploy.
+- **Convex:** personal dev is `savory-viper-342`, and production is `savory-hyena-968`. Both were loaded from a snapshot of the local deployment (4,044 records, including the ledger at $7.15).
+- **Vercel:** connected to GitHub, so pushes to `main` deploy. The README no longer links the site; the repo is shared on its own.
 - **Clerk:** the development instance works on the Vercel domain without allowed-origins changes.
 - **The user ran the production steps** (`convex deploy`, `env set --prod`, `import --prod`, Vercel env vars). Claude Code's auto-mode classifier blocks those for the agent.
 - **Verified:** all 8 Playwright tests pass against production (`E2E_BASE_URL`).
@@ -462,4 +462,4 @@ None of the mandatory tests are cut.
 | Model choice after the cost pilot | **Decided: `claude-opus-5-5`, effort low** (Sonnet 5.5 tried and dropped) |
 | Trial counts and pool sizes if the budget is tight | **Not needed: ~$0.023/call → ~$12 for the plan** |
 | `pCatch` / `pPicky` | **Kept at 0.9 / 0.03 (frozen in `8aab8c5`)** |
-| Public repo vs. access on request | **Decided: public** (github.com/juyal-devashish/EvosDemo) |
+| Public repo vs. access on request | **Decided: public** (github.com/juyal-devashish/earned-autonomy) |
